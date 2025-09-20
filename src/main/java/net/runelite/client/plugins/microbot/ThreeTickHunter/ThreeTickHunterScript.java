@@ -6,187 +6,202 @@ import net.runelite.api.Point;
 import net.runelite.api.Skill;
 import net.runelite.api.TileObject;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.api.events.GameTick;
 import net.runelite.api.gameval.ItemID;
+import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.enums.Activity;
-import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity; // Neuer Import für die Intensität
+import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
+import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
+import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static net.runelite.client.plugins.microbot.ThreeTickHunter.ThreeTickHunterConfig.HuntingLocation.PISCARILIUS_GREY_CHINS;
+import java.util.Optional;
 
 public class ThreeTickHunterScript extends Script {
 
-    // --- Statistik-Felder für das Overlay ---
     @Getter
     private long startHunterXp = 0;
     public int trapsCaught = 0;
-
-    // --- Konfigurations- und Zustandsfelder ---
     private ThreeTickHunterConfig config;
-    private List<WorldPoint> currentTrapLocations = Collections.emptyList();
-    private WorldPoint huntingAreaCenter = null;
+    private int tickCounter = 0;
+    private boolean initialTrapsLaid = false;
 
-    // Object IDs für die verschiedenen Fallenzustände
-    private static final int TRAP_SET = 19187;
-    private static final int TRAP_SHAKING = 19189;
-    private static final int TRAP_FAILED = 19192;
+    private static final WorldArea HUNTING_AREA = new WorldArea(2510, 9285, 25, 25, 0);
+    private static final WorldPoint HUNTING_AREA_CENTER = new WorldPoint(2522, 9297, 0);
 
-    // Item ID für die Box-Falle
+    private static final int TRAP_BOX_SET_1 = 9380;
+    private static final int TRAP_BOX_SET_2 = 9385;
+    private static final int TRAP_SHAKING = 9383;
+    private static final int TRAP_FAILED = 9384;
     private static final int ITEM_ID_BOX_TRAP = 10008;
 
     public boolean run(ThreeTickHunterConfig config) {
         this.config = config;
         this.startHunterXp = Microbot.getClient().getSkillExperience(Skill.HUNTER);
         this.trapsCaught = 0;
+        this.tickCounter = 0;
+        this.initialTrapsLaid = false;
 
-        // KORREKTE ANTIBAN INITIALISIERUNG
-        // Setze die Basis-Aktivität auf Chinchompa-Jagen
         Rs2Antiban.setActivity(Activity.HUNTING_CHINCHOMPAS);
-        // Überschreibe die Intensität, da 3-Ticking eine extrem hohe Anforderung hat
         Rs2Antiban.setActivityIntensity(ActivityIntensity.EXTREME);
 
-        initializeLocations(config.huntingLocation());
-
-        if (huntingAreaCenter == null) {
-            Microbot.log("Kein gültiger Jagdort ausgewählt. Skript wird beendet.");
-            return false;
-        }
-
-        mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(this::mainLoop, 0, 600, TimeUnit.MILLISECONDS);
+        Microbot.getEventBus().register(this);
         return true;
     }
 
     @Override
     public void shutdown() {
+        Microbot.getEventBus().unregister(this);
         super.shutdown();
     }
 
-    private void mainLoop() {
+    @Subscribe
+    public void onGameTick(GameTick event) {
         try {
-            if (Rs2Antiban.getTIMEOUT() > 0) {
-                Rs2Antiban.setTIMEOUT(Rs2Antiban.getTIMEOUT() - 1);
+            if (!Microbot.isLoggedIn() || !super.run() || Rs2Antiban.getTIMEOUT() > 0) return;
+
+            if (!HUNTING_AREA.contains(Rs2Player.getWorldLocation())) {
+                Microbot.log("Walking to hunting area...");
+                Rs2Walker.walkTo(HUNTING_AREA_CENTER);
                 return;
             }
 
-            if (!Microbot.isLoggedIn() || !super.run()) return;
-
-            if (Rs2Player.getWorldLocation().distanceTo(huntingAreaCenter) > 15) {
-                Rs2Walker.walkTo(huntingAreaCenter);
-                return;
+            if (!initialTrapsLaid) {
+                handleInitialSetup();
+            } else {
+                handleThreeTickCycle();
             }
-
-            performTickManipulation();
-
-            boolean actionPerformed = handleFinishedTraps();
-
-            if (!actionPerformed) {
-                actionPerformed = layNewTraps();
-            }
-
-            if (actionPerformed) {
-                Rs2Antiban.actionCooldown();
-            }
-
         } catch (Exception ex) {
             Microbot.log("[ThreeTickHunter] Error: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
 
+    private void handleInitialSetup() {
+        long laidTraps = countLaidTraps();
+        if (laidTraps >= getMaxTraps()) {
+            Microbot.log("Initial trap setup complete. Starting 3-tick cycle.");
+            initialTrapsLaid = true;
+            tickCounter = 0;
+            return;
+        }
+
+        Microbot.log("Setting up initial traps (" + laidTraps + "/" + getMaxTraps() + ")");
+        if (!handleFinishedTraps()) {
+            if (!Rs2Player.isMoving() && !Rs2Player.isAnimating()) {
+                layNewTraps();
+                sleep(1200, 1800);
+            }
+        }
+    }
+
+    private void handleThreeTickCycle() {
+        if (tickCounter % 3 == 0) {
+            boolean actionPerformed = handleFinishedTraps() || layNewTraps();
+            if (actionPerformed) {
+                Rs2Antiban.actionCooldown();
+            }
+        } else if (tickCounter % 3 == 1) {
+            performTickManipulation();
+        }
+        tickCounter++;
+    }
+
     private void performTickManipulation() {
         if (config.tickMethod() == ThreeTickHunterConfig.TickManipulationMethod.TEAK_LOGS) {
             if (Rs2Inventory.hasItem(ItemID.TEAK_LOGS) && Rs2Inventory.hasItem(ItemID.KNIFE)) {
                 Rs2Inventory.combine(ItemID.KNIFE, ItemID.TEAK_LOGS);
+                Rs2Antiban.actionCooldown();
             }
         } else if (config.tickMethod() == ThreeTickHunterConfig.TickManipulationMethod.HERB_AND_TAR) {
             if (Rs2Inventory.hasItem(ItemID.SWAMP_TAR) && Rs2Inventory.hasItem(ItemID.GUAM_LEAF)) {
                 Rs2Inventory.combine(ItemID.GUAM_LEAF, ItemID.SWAMP_TAR);
+                Rs2Antiban.actionCooldown();
             }
         }
-        sleep(100, 150);
     }
 
     private boolean handleFinishedTraps() {
-        for (WorldPoint location : currentTrapLocations) {
-            TileObject trap = Rs2GameObject.findObjectByLocation(location);
-            if (trap == null) continue;
+        List<TileObject> finishedTraps = Rs2GameObject.getAll(trap -> {
+            int id = trap.getId();
+            return (id == TRAP_SHAKING || id == TRAP_FAILED) && HUNTING_AREA.contains(trap.getWorldLocation());
+        });
 
-            if (trap.getId() == TRAP_SHAKING) {
-                Rs2GameObject.interact(trap, "Check");
-                sleepUntil(() -> Rs2GameObject.findObjectByLocation(location) == null, 2400);
-                trapsCaught++;
-                return true;
+        if (!finishedTraps.isEmpty()) {
+            finishedTraps.sort(Comparator.comparingInt(t -> t.getWorldLocation().distanceTo(Rs2Player.getWorldLocation())));
+            TileObject trapToHandle = finishedTraps.get(0);
+            String action = trapToHandle.getId() == TRAP_SHAKING ? "Check" : "Dismantle";
+
+            if (action.equals("Check") && Rs2Inventory.isFull()) {
+                Microbot.log("Inventory is full, cannot check trap.");
+                return false;
             }
 
-
-
-            if (trap.getId() == TRAP_FAILED) {
-                Rs2GameObject.interact(trap, "Dismantle");
-                sleepUntil(() -> Rs2GameObject.findObjectByLocation(location) == null, 2400);
-                return true;
-            }
+            Rs2GameObject.interact(trapToHandle, action);
+            if (action.equals("Check")) trapsCaught++;
+            return true;
         }
         return false;
     }
 
+    // NEUE HILFSMETHODE: Löst den "Lay"-Befehl direkt im Inventar aus
+    private boolean layTrapDirect() {
+        Rs2ItemModel trap = Rs2Inventory.get(ITEM_ID_BOX_TRAP);
+        if (trap == null) return false;
+
+        // Hier wird die "Lay"-Aktion direkt aufgerufen
+        boolean success = Rs2Inventory.interact(trap, "Lay");
+        if (success) {
+            WorldPoint pos = Rs2Player.getWorldLocation();
+            // Wartet, bis das Fallen-Objekt auf dem Spieler-Tile erscheint
+            return sleepUntil(() -> Rs2GameObject.findObjectByLocation(pos) != null, 2500);
+        }
+        return false;
+    }
+
+    // ÜBERARBEITETE METHODE: Nutzt die neue, direkte "Lay"-Aktion
     private boolean layNewTraps() {
-        int maxTraps = getMaxTraps();
-        long laidTrapsCount = currentTrapLocations.stream()
-                .map(Rs2GameObject::findObjectByLocation)
-                .filter(obj -> obj != null && (obj.getId() == TRAP_SET || obj.getId() == TRAP_SHAKING))
-                .count();
+        if (countLaidTraps() >= getMaxTraps() || !Rs2Inventory.hasItem(ITEM_ID_BOX_TRAP)) {
+            return false;
+        }
 
-        if (laidTrapsCount < maxTraps && Rs2Inventory.hasItem(ITEM_ID_BOX_TRAP)) {
-            for (WorldPoint location : currentTrapLocations) {
-                if (Rs2GameObject.findObjectByLocation(location) == null) {
-                    if (Rs2Inventory.use(ITEM_ID_BOX_TRAP)) {
-                        if (sleepUntil(Rs2Inventory::isItemSelected, 1000)) {
-                            LocalPoint localPoint = LocalPoint.fromWorld(Microbot.getClient(), location);
-                            if (localPoint != null) {
-                                Point tilePoint = Perspective.localToCanvas(Microbot.getClient(), localPoint, Microbot.getClient().getPlane());
-                                if (tilePoint != null) {
-                                    Microbot.getMouse().click(tilePoint);
-                                    sleepUntil(() -> Rs2GameObject.findObjectByLocation(location) != null, 2400);
-                                    return true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        WorldPoint playerPos = Rs2Player.getWorldLocation();
+        boolean currentTileIsSafe = Rs2Tile.isWalkable(playerPos) && Rs2GameObject.findObjectByLocation(playerPos) == null;
+
+        if (currentTileIsSafe) {
+            // Wenn der aktuelle Platz sicher ist, lege die Falle direkt
+            return layTrapDirect();
+        } else {
+            // Ansonsten, suche einen neuen Platz und laufe dorthin
+            Optional<WorldPoint> bestSpot = HUNTING_AREA.toWorldPointList().stream()
+                    .filter(p -> p.distanceTo(playerPos) <= 7)
+                    .filter(Rs2Tile::isWalkable)
+                    .filter(p -> Rs2GameObject.findObjectByLocation(p) == null)
+                    .min(Comparator.comparingInt(p -> p.distanceTo(playerPos)));
+
+            bestSpot.ifPresent(spot -> {
+                Microbot.log("Current tile is blocked, walking to a new spot.");
+                Rs2Walker.walkTo(spot);
+            });
         }
         return false;
     }
 
-    private void initializeLocations(ThreeTickHunterConfig.HuntingLocation location) {
-        switch (location) {
-            case FELDIP_HILLS_RED_CHINS:
-                this.huntingAreaCenter = new WorldPoint(2557, 2908, 0);
-                this.currentTrapLocations = List.of(
-                        new WorldPoint(2555, 2908, 0),
-                        new WorldPoint(2557, 2910, 0),
-                        new WorldPoint(2559, 2908, 0),
-                        new WorldPoint(2557, 2906, 0),
-                        new WorldPoint(2557, 2912, 0)
-                );
-                break;
-            case PISCARILIUS_GREY_CHINS:
-                this.huntingAreaCenter = new WorldPoint(1759, 3862, 0);
-                this.currentTrapLocations = List.of(
-                        // Hier die Koordinaten für graue Chins hinzufügen
-                );
-                break;
-        }
+    private long countLaidTraps() {
+        return Rs2GameObject.getAll(trap -> {
+            int id = trap.getId();
+            return (id == TRAP_BOX_SET_1 || id == TRAP_BOX_SET_2 || id == TRAP_SHAKING) && HUNTING_AREA.contains(trap.getWorldLocation());
+        }).size();
     }
 
     private int getMaxTraps() {

@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.microbot.ThreeTickHunter; // Stelle sicher, dass der Paketname korrekt ist
+package net.runelite.client.plugins.microbot.ThreeTickHunter;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -10,17 +10,17 @@ import net.runelite.client.config.ConfigItem;
 @ConfigGroup("ThreeTickHunter")
 @ConfigInformation("<html>"
         + "<h2 style='color: #6d9eeb;'>3-Tick Hunter by Microbot</h2>"
-        + "<p>This plugin automates 3-tick box trapping for Hunter training.</p>\n"
-        + "<p><b>Instructions:</b> Select your hunting location and your preferred tick manipulation method. The script will run until stopped.</p>\n"
+        + "<p>This plugin automates 3-tick box trapping in the Jungle Eagle Lair.</p>\n"
+        + "<p><b>Requirement:</b> Eagles' Peak quest.</p>\n"
+        + "<p><b>Instructions:</b> Select your preferred tick manipulation method.</p>\n"
         + "</html>")
 public interface ThreeTickHunterConfig extends Config {
 
     @RequiredArgsConstructor
     @Getter
     enum HuntingLocation {
-        FELDIP_HILLS_RED_CHINS("Feldip Hills (Red Chins)"),
-        PISCARILIUS_GREY_CHINS("Piscatorius (Grey Chins)"),
-        WILDERNESS_BLACK_CHINS("Wilderness (Black Chins)");
+        // Nur noch dieser Ort ist relevant
+        JUNGLE_EAGLE_LAIR("Jungle Eagle Lair (Red Chins)");
 
         private final String name;
 
@@ -44,14 +44,16 @@ public interface ThreeTickHunterConfig extends Config {
         }
     }
 
+    // Dieser Config-Punkt bleibt bestehen, damit die Logik im Skript nicht bricht,
+    // auch wenn es nur eine Option gibt.
     @ConfigItem(
             keyName = "huntingLocation",
             name = "Hunting Location",
-            description = "Select where you want to hunt.",
+            description = "The script is locked to the Jungle Eagle Lair.",
             position = 0
     )
     default HuntingLocation huntingLocation() {
-        return HuntingLocation.FELDIP_HILLS_RED_CHINS;
+        return HuntingLocation.JUNGLE_EAGLE_LAIR;
     }
 
     @ConfigItem(
