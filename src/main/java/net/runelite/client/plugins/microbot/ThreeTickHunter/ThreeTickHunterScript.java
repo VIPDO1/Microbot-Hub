@@ -1,132 +1,183 @@
 package net.runelite.client.plugins.microbot.ThreeTickHunter;
 
 import lombok.Getter;
-import net.runelite.api.Perspective;
-import net.runelite.api.Point;
 import net.runelite.api.Skill;
 import net.runelite.api.TileObject;
-import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldArea;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.GameTick;
 import net.runelite.api.gameval.ItemID;
-import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
+import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.antiban.enums.Activity;
-import net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
-import net.runelite.client.plugins.microbot.util.inventory.Rs2ItemModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
-import net.runelite.client.plugins.microbot.util.tile.Rs2Tile;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class ThreeTickHunterScript extends Script {
 
     @Getter
-    private long startHunterXp = 0;
-    public int trapsCaught = 0;
-    private ThreeTickHunterConfig config;
-    private int tickCounter = 0;
-    private boolean initialTrapsLaid = false;
+    public enum State {
+        IDLE,
+        WALKING_TO_AREA,
+        INITIALIZING_TRAPS,
+        INITIAL_TRAP_SETUP,
+        THREE_TICK_HUNTING,
+        STOPPED
+    }
 
-    private static final WorldArea HUNTING_AREA = new WorldArea(2510, 9285, 25, 25, 0);
+    @Getter
+    private State currentState = State.IDLE;
+    @Getter
+    private long startHunterXp = 0;
+    @Getter
+    private int trapsCaught = 0;
+    private int tickCounter = 0;
+    private boolean hasInitialized = false;
+
+    @Getter
+    private final WorldArea HUNTING_AREA = new WorldArea(2510, 9285, 25, 25, 0); // Example: Red chins
     private static final WorldPoint HUNTING_AREA_CENTER = new WorldPoint(2522, 9297, 0);
+
+    private final List<WorldPoint> trapLocations = new ArrayList<>();
 
     private static final int TRAP_BOX_SET_1 = 9380;
     private static final int TRAP_BOX_SET_2 = 9385;
     private static final int TRAP_SHAKING = 9383;
     private static final int TRAP_FAILED = 9384;
-    private static final int ITEM_ID_BOX_TRAP = 10008;
 
     public boolean run(ThreeTickHunterConfig config) {
-        this.config = config;
-        this.startHunterXp = Microbot.getClient().getSkillExperience(Skill.HUNTER);
-        this.trapsCaught = 0;
-        this.tickCounter = 0;
-        this.initialTrapsLaid = false;
+        Microbot.enableAutoRunOn = true;
+        currentState = State.IDLE;
+        applyAntiBanSettings();
+        Rs2Antiban.setActivity(Activity.SKILLING);
 
-        Rs2Antiban.setActivity(Activity.HUNTING_CHINCHOMPAS);
-        Rs2Antiban.setActivityIntensity(ActivityIntensity.EXTREME);
+        mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
+            try {
+                if (!Microbot.isLoggedIn() || !super.run()) return;
 
-        Microbot.getEventBus().register(this);
+                if (!hasInitialized) {
+                    startHunterXp = Microbot.getClient().getSkillExperience(Skill.HUNTER);
+                    if (startHunterXp > 0) hasInitialized = true;
+                    return;
+                }
+
+                Rs2Antiban.takeMicroBreakByChance();
+                determineState(config);
+
+                switch (currentState) {
+                    case WALKING_TO_AREA:
+                        Rs2Walker.walkTo(HUNTING_AREA_CENTER);
+                        break;
+                    case INITIALIZING_TRAPS:
+                        initializeTrapLocations();
+                        break;
+                    case INITIAL_TRAP_SETUP:
+                        handleInitialSetup();
+                        break;
+                    case THREE_TICK_HUNTING:
+                        handleThreeTickCycle(config);
+                        break;
+                    case IDLE:
+                    case STOPPED:
+                        // Do nothing
+                        break;
+                }
+            } catch (Exception ex) {
+                Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
+            }
+        }, 0, 600, TimeUnit.MILLISECONDS); // Runs every game tick
         return true;
     }
 
     @Override
     public void shutdown() {
-        Microbot.getEventBus().unregister(this);
         super.shutdown();
+        currentState = State.IDLE;
+        Rs2Antiban.resetAntibanSettings();
     }
 
-    @Subscribe
-    public void onGameTick(GameTick event) {
-        try {
-            if (!Microbot.isLoggedIn() || !super.run() || Rs2Antiban.getTIMEOUT() > 0) return;
+    private void determineState(ThreeTickHunterConfig config) {
+        if (!HUNTING_AREA.contains(Rs2Player.getWorldLocation())) {
+            currentState = State.WALKING_TO_AREA;
+        } else if (trapLocations.isEmpty()) {
+            currentState = State.INITIALIZING_TRAPS;
+        } else if (countAllTraps() < trapLocations.size()) {
+            currentState = State.INITIAL_TRAP_SETUP;
+        } else {
+            currentState = State.THREE_TICK_HUNTING;
+        }
+    }
 
-            if (!HUNTING_AREA.contains(Rs2Player.getWorldLocation())) {
-                Microbot.log("Walking to hunting area...");
-                Rs2Walker.walkTo(HUNTING_AREA_CENTER);
-                return;
-            }
+    private void initializeTrapLocations() {
+        WorldPoint startingPoint = Rs2Player.getWorldLocation();
+        trapLocations.clear();
 
-            if (!initialTrapsLaid) {
-                handleInitialSetup();
-            } else {
-                handleThreeTickCycle();
-            }
-        } catch (Exception ex) {
-            Microbot.log("[ThreeTickHunter] Error: " + ex.getMessage());
-            ex.printStackTrace();
+        List<WorldPoint> potentialLocations = new ArrayList<>();
+        potentialLocations.add(startingPoint.dx(-1).dy(1));
+        potentialLocations.add(startingPoint.dx(1).dy(1));
+        potentialLocations.add(startingPoint);
+        potentialLocations.add(startingPoint.dx(-1).dy(-1));
+        potentialLocations.add(startingPoint.dx(1).dy(-1));
+
+        trapLocations.addAll(potentialLocations.stream()
+                .filter(point -> !isTrapOnTile(point)) // Use the consolidated helper method
+                .limit(getMaxTraps())
+                .collect(Collectors.toList()));
+
+        if (trapLocations.isEmpty()) {
+            Microbot.log("CRITICAL: No valid trap locations found. Please move and restart.");
+            currentState = State.STOPPED;
+        } else {
+            Microbot.log("Trap locations initialized: " + trapLocations.size());
         }
     }
 
     private void handleInitialSetup() {
-        long laidTraps = countLaidTraps();
-        if (laidTraps >= getMaxTraps()) {
-            Microbot.log("Initial trap setup complete. Starting 3-tick cycle.");
-            initialTrapsLaid = true;
-            tickCounter = 0;
-            return;
-        }
+        if (Rs2Player.isAnimating()) return;
 
-        Microbot.log("Setting up initial traps (" + laidTraps + "/" + getMaxTraps() + ")");
-        if (!handleFinishedTraps()) {
-            if (!Rs2Player.isMoving() && !Rs2Player.isAnimating()) {
-                layNewTraps();
+        Optional<WorldPoint> nextSpot = trapLocations.stream()
+                .filter(point -> !isTrapOnTile(point))
+                .findFirst();
+
+        nextSpot.ifPresent(targetSpot -> {
+            if (Rs2Player.getWorldLocation().equals(targetSpot)) {
+                Rs2Inventory.interact(ItemID.BOX_TRAP, "Lay");
                 sleep(1200, 1800);
+            } else {
+                Rs2Walker.walkTo(targetSpot);
             }
-        }
+        });
     }
 
-    private void handleThreeTickCycle() {
+    private void handleThreeTickCycle(ThreeTickHunterConfig config) {
         if (tickCounter % 3 == 0) {
-            boolean actionPerformed = handleFinishedTraps() || layNewTraps();
-            if (actionPerformed) {
-                Rs2Antiban.actionCooldown();
-            }
+            // Prioritize handling finished traps. If none are found (method returns false), try to lay a new one.
+            handleFinishedTraps() || layNewTrapCycle();
         } else if (tickCounter % 3 == 1) {
-            performTickManipulation();
+            performTickManipulation(config);
         }
         tickCounter++;
     }
 
-    private void performTickManipulation() {
+    private void performTickManipulation(ThreeTickHunterConfig config) {
+        // CORRECTED: Use high-level Rs2Inventory methods instead of the non-existent Rs2Item class.
         if (config.tickMethod() == ThreeTickHunterConfig.TickManipulationMethod.TEAK_LOGS) {
-            if (Rs2Inventory.hasItem(ItemID.TEAK_LOGS) && Rs2Inventory.hasItem(ItemID.KNIFE)) {
-                Rs2Inventory.combine(ItemID.KNIFE, ItemID.TEAK_LOGS);
-                Rs2Antiban.actionCooldown();
+            if (Rs2Inventory.hasItem(ItemID.KNIFE) && Rs2Inventory.hasItem(ItemID.TEAK_LOGS)) {
+                Rs2Inventory.use(ItemID.KNIFE, ItemID.TEAK_LOGS);
             }
         } else if (config.tickMethod() == ThreeTickHunterConfig.TickManipulationMethod.HERB_AND_TAR) {
-            if (Rs2Inventory.hasItem(ItemID.SWAMP_TAR) && Rs2Inventory.hasItem(ItemID.GUAM_LEAF)) {
-                Rs2Inventory.combine(ItemID.GUAM_LEAF, ItemID.SWAMP_TAR);
-                Rs2Antiban.actionCooldown();
+            if (Rs2Inventory.hasItem(ItemID.GUAM_LEAF) && Rs2Inventory.hasItem(ItemID.SWAMP_TAR)) {
+                Rs2Inventory.use(ItemID.GUAM_LEAF, ItemID.SWAMP_TAR);
             }
         }
     }
@@ -142,66 +193,45 @@ public class ThreeTickHunterScript extends Script {
             TileObject trapToHandle = finishedTraps.get(0);
             String action = trapToHandle.getId() == TRAP_SHAKING ? "Check" : "Dismantle";
 
-            if (action.equals("Check") && Rs2Inventory.isFull()) {
-                Microbot.log("Inventory is full, cannot check trap.");
-                return false;
-            }
+            if (action.equals("Check") && Rs2Inventory.isFull()) return false;
 
             Rs2GameObject.interact(trapToHandle, action);
             if (action.equals("Check")) trapsCaught++;
+            sleep(600, 1000);
             return true;
         }
         return false;
     }
 
-    // NEUE HILFSMETHODE: Löst den "Lay"-Befehl direkt im Inventar aus
-    private boolean layTrapDirect() {
-        Rs2ItemModel trap = Rs2Inventory.get(ITEM_ID_BOX_TRAP);
-        if (trap == null) return false;
+    private boolean layNewTrapCycle() {
+        if (Rs2Player.isAnimating() || countAllTraps() >= trapLocations.size()) return false;
 
-        // Hier wird die "Lay"-Aktion direkt aufgerufen
-        boolean success = Rs2Inventory.interact(trap, "Lay");
-        if (success) {
-            WorldPoint pos = Rs2Player.getWorldLocation();
-            // Wartet, bis das Fallen-Objekt auf dem Spieler-Tile erscheint
-            return sleepUntil(() -> Rs2GameObject.findObjectByLocation(pos) != null, 2500);
+        Optional<WorldPoint> nextSpot = trapLocations.stream()
+                .filter(point -> !isTrapOnTile(point))
+                .findFirst();
+
+        if (nextSpot.isPresent()) {
+            WorldPoint targetSpot = nextSpot.get();
+            if (Rs2Player.getWorldLocation().equals(targetSpot)) {
+                return Rs2Inventory.interact(ItemID.BOX_TRAP, "Lay");
+            } else {
+                Rs2Walker.walkTo(targetSpot);
+                return true;
+            }
         }
         return false;
     }
 
-    // ÜBERARBEITETE METHODE: Nutzt die neue, direkte "Lay"-Aktion
-    private boolean layNewTraps() {
-        if (countLaidTraps() >= getMaxTraps() || !Rs2Inventory.hasItem(ITEM_ID_BOX_TRAP)) {
-            return false;
-        }
+    // Helper Methods
 
-        WorldPoint playerPos = Rs2Player.getWorldLocation();
-        boolean currentTileIsSafe = Rs2Tile.isWalkable(playerPos) && Rs2GameObject.findObjectByLocation(playerPos) == null;
-
-        if (currentTileIsSafe) {
-            // Wenn der aktuelle Platz sicher ist, lege die Falle direkt
-            return layTrapDirect();
-        } else {
-            // Ansonsten, suche einen neuen Platz und laufe dorthin
-            Optional<WorldPoint> bestSpot = HUNTING_AREA.toWorldPointList().stream()
-                    .filter(p -> p.distanceTo(playerPos) <= 7)
-                    .filter(Rs2Tile::isWalkable)
-                    .filter(p -> Rs2GameObject.findObjectByLocation(p) == null)
-                    .min(Comparator.comparingInt(p -> p.distanceTo(playerPos)));
-
-            bestSpot.ifPresent(spot -> {
-                Microbot.log("Current tile is blocked, walking to a new spot.");
-                Rs2Walker.walkTo(spot);
-            });
-        }
-        return false;
+    // CONSOLIDATED: Replaced isTileValidForTrap and the old isTrapOnTile with this single method.
+    private boolean isTrapOnTile(WorldPoint point) {
+        return Rs2GameObject.isGameObjectOnTile(point, TRAP_BOX_SET_1, TRAP_BOX_SET_2, TRAP_SHAKING, TRAP_FAILED);
     }
 
-    private long countLaidTraps() {
-        return Rs2GameObject.getAll(trap -> {
-            int id = trap.getId();
-            return (id == TRAP_BOX_SET_1 || id == TRAP_BOX_SET_2 || id == TRAP_SHAKING) && HUNTING_AREA.contains(trap.getWorldLocation());
-        }).size();
+    private long countAllTraps() {
+        // Count only traps that are within our defined trap locations for better accuracy
+        return trapLocations.stream().filter(this::isTrapOnTile).count();
     }
 
     private int getMaxTraps() {
@@ -211,5 +241,11 @@ public class ThreeTickHunterScript extends Script {
         if (level >= 40) return 3;
         if (level >= 20) return 2;
         return 1;
+    }
+
+    private void applyAntiBanSettings() {
+        Rs2AntibanSettings.antibanEnabled = true;
+        Rs2AntibanSettings.actionCooldownChance = 0.1;
+        // Add other anti-ban settings as desired
     }
 }
