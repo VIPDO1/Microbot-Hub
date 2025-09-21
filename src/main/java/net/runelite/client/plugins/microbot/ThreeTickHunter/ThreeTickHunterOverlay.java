@@ -15,6 +15,8 @@ import net.runelite.client.ui.overlay.components.TitleComponent;
 
 import javax.inject.Inject;
 import java.awt.*;
+import java.time.Duration;
+import java.time.Instant;
 
 public class ThreeTickHunterOverlay extends OverlayPanel {
 
@@ -36,9 +38,7 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
     @Override
     public Dimension render(Graphics2D graphics) {
         ThreeTickHunterScript script = plugin.getScript();
-        if (script == null) return null;
-
-        // --- Ground Marker Rendering ---
+        if (script == null || !script.isRunning()) return null;
         WorldArea huntingArea = script.getHUNTING_AREA();
         if (huntingArea != null) {
             drawArea(graphics, huntingArea, ARENA_COLOR);
@@ -47,7 +47,6 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
             drawTile(graphics, trapLocation, TRAP_COLOR);
         }
 
-        // --- Info Panel Rendering ---
         panelComponent.setPreferredSize(new Dimension(270, 300));
         panelComponent.getChildren().clear();
 
@@ -58,13 +57,22 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
 
         panelComponent.getChildren().add(LineComponent.builder()
                 .left("State:")
-                .right(plugin.getCurrentState())
+                .right(script.getCurrentState().toString())
                 .rightColor(getStateColor(script.getCurrentState()))
                 .build());
 
+        long elapsedMillis = Duration.between(plugin.getStartTime(), Instant.now()).toMillis();
+        String timeRunning = formatDuration(elapsedMillis);
+
+        long xpGained = Microbot.getClient().getSkillExperience(Skill.HUNTER) - script.getStartHunterXp();
+        long xpPerHour = (long) (xpGained * 3_600_000.0 / (elapsedMillis > 0 ? elapsedMillis : 1));
+
+        int trapsCaught = script.getTrapsCaught();
+        long trapsPerHour = (long) (trapsCaught * 3_600_000.0 / (elapsedMillis > 0 ? elapsedMillis : 1));
+
         panelComponent.getChildren().add(LineComponent.builder()
                 .left("Time Running:")
-                .right(plugin.getTimeRunning())
+                .right(timeRunning)
                 .build());
 
         panelComponent.getChildren().add(LineComponent.builder()
@@ -74,12 +82,12 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
 
         panelComponent.getChildren().add(LineComponent.builder()
                 .left("XP Gained (p/h):")
-                .right(formatNumber(plugin.getHunterXpGained()) + " (" + formatNumber(plugin.getXpPerHour()) + ")")
+                .right(formatNumber(xpGained) + " (" + formatNumber(xpPerHour) + ")")
                 .build());
 
         panelComponent.getChildren().add(LineComponent.builder()
                 .left("Traps Caught (p/h):")
-                .right(formatNumber(plugin.getTrapsCaught()) + " (" + formatNumber(plugin.getTrapsPerHour()) + ")")
+                .right(formatNumber(trapsCaught) + " (" + formatNumber(trapsPerHour) + ")")
                 .build());
 
         return super.render(graphics);
@@ -91,25 +99,29 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
         return String.valueOf(number);
     }
 
+    private String formatDuration(long millis) {
+        long seconds = (millis / 1000) % 60;
+        long minutes = (millis / (1000 * 60)) % 60;
+        long hours = millis / (1000 * 60 * 60);
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
+
     private Color getStateColor(ThreeTickHunterScript.State state) {
         if (state == null) return Color.WHITE;
         switch (state) {
-            case THREE_TICK_HUNTING:
-                return Color.GREEN;
+            case THREE_TICK_HUNTING: return Color.GREEN;
             case WALKING_TO_AREA:
-            case INITIAL_TRAP_SETUP:
-                return Color.YELLOW;
-            case STOPPED:
-                return Color.RED;
-            default:
-                return Color.WHITE;
+            case INITIAL_TRAP_SETUP: return Color.YELLOW;
+            case STOPPED: return Color.RED;
+            default: return Color.WHITE;
         }
     }
 
     private void drawTile(Graphics2D graphics, WorldPoint point, Color color) {
-        if (point == null || point.getPlane() != client.getPlane()) return;
-        LocalPoint lp = LocalPoint.fromWorld(client, point);
+        if (point == null || point.getPlane() != client.getTopLevelWorldView().getPlane()) return;
+        LocalPoint lp = LocalPoint.fromWorld(client.getTopLevelWorldView(), point);
         if (lp == null) return;
+
         Polygon poly = Perspective.getCanvasTilePoly(client, lp);
         if (poly != null) {
             graphics.setColor(color);
@@ -118,8 +130,15 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
     }
 
     private void drawArea(Graphics2D graphics, WorldArea area, Color color) {
-        for (WorldPoint tile : area.toWorldPointList()) {
-            drawTile(graphics, tile, color);
+        LocalPoint lp = LocalPoint.fromWorld(client.getTopLevelWorldView(), area.toWorldPoint());
+        if (lp == null || client.getLocalPlayer() == null) return;
+        if (lp.distanceTo(client.getLocalPlayer().getLocalLocation()) > 4000) return;
+
+        for (int x = 0; x < area.getWidth(); x++) {
+            for (int y = 0; y < area.getHeight(); y++) {
+                WorldPoint tile = new WorldPoint(area.getX() + x, area.getY() + y, area.getPlane());
+                drawTile(graphics, tile, color);
+            }
         }
     }
 }
