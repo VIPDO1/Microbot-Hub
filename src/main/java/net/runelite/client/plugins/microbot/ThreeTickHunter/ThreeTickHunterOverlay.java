@@ -25,6 +25,8 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
 
     private static final Color ARENA_COLOR = new Color(0, 255, 255, 50);
     private static final Color TRAP_COLOR = new Color(255, 255, 0, 100);
+    // KORREKTUR: Umbenannt für Klarheit
+    private static final Color OPERATING_TILE_COLOR = new Color(0, 255, 0, 100);
 
     @Inject
     ThreeTickHunterOverlay(ThreeTickHunterPlugin plugin, Client client) {
@@ -39,12 +41,19 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
     public Dimension render(Graphics2D graphics) {
         ThreeTickHunterScript script = plugin.getScript();
         if (script == null || !script.isRunning()) return null;
+
         WorldArea huntingArea = script.getHUNTING_AREA();
         if (huntingArea != null) {
             drawArea(graphics, huntingArea, ARENA_COLOR);
         }
+
         for (WorldPoint trapLocation : script.getTrapLocations()) {
             drawTile(graphics, trapLocation, TRAP_COLOR);
+        }
+
+        // KORREKTUR: Verwende die korrekte Methode getOperatingTile()
+        if (script.getOperatingTile() != null) {
+            drawTile(graphics, script.getOperatingTile(), OPERATING_TILE_COLOR);
         }
 
         panelComponent.setPreferredSize(new Dimension(270, 300));
@@ -60,6 +69,8 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
                 .right(script.getCurrentState().toString())
                 .rightColor(getStateColor(script.getCurrentState()))
                 .build());
+
+        if (plugin.getStartTime() == null) return super.render(graphics);
 
         long elapsedMillis = Duration.between(plugin.getStartTime(), Instant.now()).toMillis();
         String timeRunning = formatDuration(elapsedMillis);
@@ -110,16 +121,16 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
         if (state == null) return Color.WHITE;
         switch (state) {
             case THREE_TICK_HUNTING: return Color.GREEN;
-            case WALKING_TO_AREA:
-            case INITIAL_TRAP_SETUP: return Color.YELLOW;
+            case SETTING_UP:
+            case SETTING_UP_TRAPS: return Color.YELLOW;
             case STOPPED: return Color.RED;
             default: return Color.WHITE;
         }
     }
 
     private void drawTile(Graphics2D graphics, WorldPoint point, Color color) {
-        if (point == null || point.getPlane() != client.getTopLevelWorldView().getPlane()) return;
-        LocalPoint lp = LocalPoint.fromWorld(client.getTopLevelWorldView(), point);
+        if (point == null || point.getPlane() != client.getPlane()) return;
+        LocalPoint lp = LocalPoint.fromWorld(client, point);
         if (lp == null) return;
 
         Polygon poly = Perspective.getCanvasTilePoly(client, lp);
@@ -130,7 +141,7 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
     }
 
     private void drawArea(Graphics2D graphics, WorldArea area, Color color) {
-        LocalPoint lp = LocalPoint.fromWorld(client.getTopLevelWorldView(), area.toWorldPoint());
+        LocalPoint lp = LocalPoint.fromWorld(client, area.toWorldPoint());
         if (lp == null || client.getLocalPlayer() == null) return;
         if (lp.distanceTo(client.getLocalPlayer().getLocalLocation()) > 4000) return;
 
