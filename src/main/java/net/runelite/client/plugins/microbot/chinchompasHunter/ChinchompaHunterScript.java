@@ -204,9 +204,21 @@ public class ChinchompaHunterScript extends Script {
     // --- Helfermethoden ---
 
     private boolean isTileValidForPlacement(WorldPoint point) {
-        return Rs2Tile.isWalkable(point)
-                && !isTrapOnTile(point)
-                && !trapSpots.contains(point);
+        // Wir prüfen jede Bedingung einzeln, um detailliertes Feedback geben zu können.
+        boolean isWalkable = Rs2Tile.isWalkable(point);
+        boolean isTrapPresent = isTrapOnTile(point);
+        boolean isAlreadyASpot = trapSpots.contains(point);
+
+        // Die Kachel ist nur gültig, wenn alle drei Bedingungen zutreffen.
+        boolean isValid = isWalkable && !isTrapPresent && !isAlreadyASpot;
+
+        // Wenn die Kachel als ungültig eingestuft wird, geben wir den genauen Grund aus.
+        if (!isValid) {
+            // Diese Zeile wird uns den Fehler verraten!
+            Microbot.log("Prüfe Kachel " + point + ": UNGÜLTIG! -> Begehbar: " + isWalkable + " | Falle da: " + isTrapPresent + " | Schon Spot: " + isAlreadyASpot);
+        }
+
+        return isValid;
     }
 
     private Optional<WorldPoint> findNearestValidTile(WorldPoint center) {
