@@ -1,7 +1,8 @@
-package net.runelite.client.plugins.microbot.ChinchompasHunter;
+package net.runelite.client.plugins.microbot.chinchompasHunter;
 
 import com.google.inject.Provides;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.MicrobotPlugin;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -16,7 +17,7 @@ import java.time.Instant;
         minClientVersion = "1.9.8",
         enabledByDefault = false
 )
-public class ChinchompaHunterPlugin extends MicrobotPlugin {
+public class ChinchompaHunterPlugin extends Plugin {
 
     @Inject
     private ChinchompaHunterConfig config;

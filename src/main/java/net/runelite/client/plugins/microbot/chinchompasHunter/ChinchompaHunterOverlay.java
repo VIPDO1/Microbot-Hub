@@ -1,13 +1,8 @@
-package net.runelite.client.plugins.microbot.ChinchompasHunter;
+package net.runelite.client.plugins.microbot.chinchompasHunter;
 
 import net.runelite.api.Client;
-import net.runelite.api.Perspective;
 import net.runelite.api.Skill;
-import net.runelite.api.coords.LocalPoint;
-import net.runelite.api.coords.WorldArea;
-import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -21,19 +16,12 @@ import java.time.Instant;
 public class ChinchompaHunterOverlay extends OverlayPanel {
 
     private final ChinchompaHunterPlugin plugin;
-    private final Client client;
-
-    private static final Color ARENA_COLOR = new Color(0, 255, 255, 50);
-    private static final Color TRAP_COLOR = new Color(255, 255, 0, 100);
-    private static final Color OPERATING_TILE_COLOR = new Color(0, 255, 0, 100);
 
     @Inject
-    ChinchompaHunterOverlay(ChinchompaHunterPlugin plugin, Client client) {
+    ChinchompaHunterOverlay(ChinchompaHunterPlugin plugin) {
         super(plugin);
         this.plugin = plugin;
-        this.client = client;
         setPosition(OverlayPosition.TOP_LEFT);
-        setLayer(OverlayLayer.ABOVE_SCENE);
     }
 
     @Override
@@ -41,25 +29,11 @@ public class ChinchompaHunterOverlay extends OverlayPanel {
         ChinchompaHunterScript script = plugin.getScript();
         if (script == null || !script.isRunning()) return null;
 
-        WorldArea huntingArea = script.getHUNTING_AREA();
-        if (huntingArea != null) {
-            drawArea(graphics, huntingArea, ARENA_COLOR);
-        }
-
-        for (WorldPoint trapLocation : script.getTrapLocations()) {
-            drawTile(graphics, trapLocation, TRAP_COLOR);
-        }
-
-        if (script.getOperatingTile() != null) {
-            drawTile(graphics, script.getOperatingTile(), OPERATING_TILE_COLOR);
-        }
-
-        panelComponent.setPreferredSize(new Dimension(270, 300));
         panelComponent.getChildren().clear();
 
         panelComponent.getChildren().add(TitleComponent.builder()
                 .text("Microbot Chinchompa Hunter")
-                .color(Color.CYAN)
+                .color(Color.ORANGE)
                 .build());
 
         panelComponent.getChildren().add(LineComponent.builder()
@@ -68,7 +42,9 @@ public class ChinchompaHunterOverlay extends OverlayPanel {
                 .rightColor(getStateColor(script.getCurrentState()))
                 .build());
 
-        if (plugin.getStartTime() == null) return super.render(graphics);
+        if (plugin.getStartTime() == null || script.getStartHunterXp() == 0) {
+            return super.render(graphics);
+        }
 
         long elapsedMillis = Duration.between(plugin.getStartTime(), Instant.now()).toMillis();
         String timeRunning = formatDuration(elapsedMillis);
@@ -115,39 +91,25 @@ public class ChinchompaHunterOverlay extends OverlayPanel {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
+    /**
+     * ✅ KORREKTUR: Farben an die exakten Zustände der V6 angepasst.
+     */
     private Color getStateColor(ChinchompaHunterScript.State state) {
         if (state == null) return Color.WHITE;
         switch (state) {
-            case CHECKING_TRAPS: return Color.GREEN;
-            case PLACING_TRAPS: return Color.YELLOW;
-            case WAITING: return Color.CYAN;
-            case STOPPED: return Color.RED;
-            default: return Color.WHITE;
-        }
-    }
-
-    private void drawTile(Graphics2D graphics, WorldPoint point, Color color) {
-        if (point == null || point.getPlane() != client.getPlane()) return;
-        LocalPoint lp = LocalPoint.fromWorld(client, point);
-        if (lp == null) return;
-
-        Polygon poly = Perspective.getCanvasTilePoly(client, lp);
-        if (poly != null) {
-            graphics.setColor(color);
-            graphics.fill(poly);
-        }
-    }
-
-    private void drawArea(Graphics2D graphics, WorldArea area, Color color) {
-        LocalPoint lp = LocalPoint.fromWorld(client, area.toWorldPoint());
-        if (lp == null || client.getLocalPlayer() == null) return;
-        if (lp.distanceTo(client.getLocalPlayer().getLocalLocation()) > 4000) return;
-
-        for (int x = 0; x < area.getWidth(); x++) {
-            for (int y = 0; y < area.getHeight(); y++) {
-                WorldPoint tile = new WorldPoint(area.getX() + x, area.getY() + y, area.getPlane());
-                drawTile(graphics, tile, color);
-            }
+            case CHECKING_TRAPS:
+                return Color.CYAN;          // Hellblau für den Fang
+            case RELEASING_CHINS:
+                return Color.GREEN;         // Grün für Inventar-Aktionen
+            case SETTING_UP:
+                return new Color(173, 216, 230); // Hellblau für den Aufbau
+            case WAITING:
+                return Color.ORANGE;        // Orange für passives Warten
+            case RESETTING_STALE_TRAPS:
+                return Color.MAGENTA;       // Magenta für Wartungsaktionen
+            case IDLE:
+            default:
+                return Color.WHITE;
         }
     }
 }

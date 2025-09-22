@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.microbot.ChinchompasHunter;
+package net.runelite.client.plugins.microbot.chinchompasHunter;
 
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
