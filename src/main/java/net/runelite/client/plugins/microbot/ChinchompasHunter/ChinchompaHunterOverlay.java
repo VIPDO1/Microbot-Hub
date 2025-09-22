@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.microbot.ThreeTickHunter;
+package net.runelite.client.plugins.microbot.ChinchompasHunter;
 
 import net.runelite.api.Client;
 import net.runelite.api.Perspective;
@@ -18,18 +18,17 @@ import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
 
-public class ThreeTickHunterOverlay extends OverlayPanel {
+public class ChinchompaHunterOverlay extends OverlayPanel {
 
-    private final ThreeTickHunterPlugin plugin;
+    private final ChinchompaHunterPlugin plugin;
     private final Client client;
 
     private static final Color ARENA_COLOR = new Color(0, 255, 255, 50);
     private static final Color TRAP_COLOR = new Color(255, 255, 0, 100);
-    // KORREKTUR: Umbenannt für Klarheit
     private static final Color OPERATING_TILE_COLOR = new Color(0, 255, 0, 100);
 
     @Inject
-    ThreeTickHunterOverlay(ThreeTickHunterPlugin plugin, Client client) {
+    ChinchompaHunterOverlay(ChinchompaHunterPlugin plugin, Client client) {
         super(plugin);
         this.plugin = plugin;
         this.client = client;
@@ -39,7 +38,7 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
 
     @Override
     public Dimension render(Graphics2D graphics) {
-        ThreeTickHunterScript script = plugin.getScript();
+        ChinchompaHunterScript script = plugin.getScript();
         if (script == null || !script.isRunning()) return null;
 
         WorldArea huntingArea = script.getHUNTING_AREA();
@@ -51,7 +50,6 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
             drawTile(graphics, trapLocation, TRAP_COLOR);
         }
 
-        // KORREKTUR: Verwende die korrekte Methode getOperatingTile()
         if (script.getOperatingTile() != null) {
             drawTile(graphics, script.getOperatingTile(), OPERATING_TILE_COLOR);
         }
@@ -60,7 +58,7 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
         panelComponent.getChildren().clear();
 
         panelComponent.getChildren().add(TitleComponent.builder()
-                .text("Microbot 3-Tick Hunter")
+                .text("Microbot Chinchompa Hunter")
                 .color(Color.CYAN)
                 .build());
 
@@ -117,12 +115,12 @@ public class ThreeTickHunterOverlay extends OverlayPanel {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
-    private Color getStateColor(ThreeTickHunterScript.State state) {
+    private Color getStateColor(ChinchompaHunterScript.State state) {
         if (state == null) return Color.WHITE;
         switch (state) {
-            case THREE_TICK_HUNTING: return Color.GREEN;
-            case SETTING_UP:
-            case SETTING_UP_TRAPS: return Color.YELLOW;
+            case CHECKING_TRAPS: return Color.GREEN;
+            case PLACING_TRAPS: return Color.YELLOW;
+            case WAITING: return Color.CYAN;
             case STOPPED: return Color.RED;
             default: return Color.WHITE;
         }

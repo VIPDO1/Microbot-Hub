@@ -1,4 +1,4 @@
-package net.runelite.client.plugins.microbot.ThreeTickHunter;
+package net.runelite.client.plugins.microbot.ChinchompasHunter;
 
 import lombok.Getter;
 import net.runelite.api.Perspective;
@@ -25,25 +25,28 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
-public class ThreeTickHunterScript extends Script {
+@Getter
+public class ChinchompaHunterScript extends Script {
 
     @Getter
     public enum State {
-        IDLE, SETTING_UP, SETTING_UP_TRAPS, THREE_TICK_HUNTING, STOPPED
+        IDLE,
+        PLACING_TRAPS,
+        CHECKING_TRAPS,
+        WAITING,
+        STOPPED
     }
 
-    @Getter private State currentState = State.IDLE;
-    @Getter private long startHunterXp = 0;
-    @Getter private int trapsCaught = 0;
-    private int tickCounter = 0;
+    private State currentState = State.IDLE;
+    private long startHunterXp = 0;
+    private int trapsCaught = 0;
     private boolean hasInitialized = false;
 
-    // NEU: Wir unterscheiden jetzt zwischen dem Startpunkt (operatingTile) und dem Zentrum des "X" (patternCenterTile)
-    @Getter private WorldPoint operatingTile;
-    @Getter private WorldPoint patternCenterTile;
+    private WorldPoint operatingTile;
+    private WorldPoint patternCenterTile;
 
-    @Getter private final WorldArea HUNTING_AREA = new WorldArea(2510, 9285, 25, 25, 0);
-    @Getter private final List<WorldPoint> trapLocations = new ArrayList<>();
+    private final WorldArea HUNTING_AREA = new WorldArea(2510, 9285, 25, 25, 0);
+    private final List<WorldPoint> trapLocations = new ArrayList<>();
 
     private static final int TRAP_BOX_SET_1 = 9380;
     private static final int TRAP_BOX_SET_2 = 9385;
@@ -51,19 +54,16 @@ public class ThreeTickHunterScript extends Script {
     private static final int TRAP_FAILED = 9384;
     private static final int BOX_TRAP_ITEM_ID = 10008;
 
-    public boolean run(ThreeTickHunterConfig config) {
+    public boolean run(ChinchompaHunterConfig config) {
         Microbot.enableAutoRunOn = true;
-        currentState = State.SETTING_UP;
+        currentState = State.IDLE;
         applyAntiBanSettings();
         Rs2Antiban.setActivity(Activity.HUNTING_CARNIVOROUS_CHINCHOMPAS);
 
-        // Dein Startpunkt wird zum "operatingTile"
         this.operatingTile = Rs2Player.getWorldLocation();
-        // Das Zentrum des "X"-Musters wird als ein Feld südlich von dir definiert
         this.patternCenterTile = this.operatingTile.dy(-1);
         Microbot.log("Operating tile set to: " + this.operatingTile);
         Microbot.log("Pattern center tile calculated as: " + this.patternCenterTile);
-
 
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
@@ -82,19 +82,21 @@ public class ThreeTickHunterScript extends Script {
                     return;
                 }
 
-                determineState();
                 Rs2Antiban.takeMicroBreakByChance();
 
-                switch (currentState) {
-                    case SETTING_UP_TRAPS:
-                        handleTrapPlacement();
-                        break;
-                    case THREE_TICK_HUNTING:
-                        handleThreeTickCycle(config);
-                        break;
-                    default:
-                        break;
+                // Priorität 1: Überprüfe und handle fertige Fallen
+                if (handleFinishedTraps()) {
+                    currentState = State.CHECKING_TRAPS;
                 }
+                // Priorität 2: Wenn nichts zu tun war, versuche neue Fallen zu legen
+                else if (handleTrapPlacement()) {
+                    currentState = State.PLACING_TRAPS;
+                }
+                // Priorität 3: Wenn alle Fallen stehen und keine fertig ist, warte
+                else {
+                    currentState = State.WAITING;
+                }
+
             } catch (Exception ex) {
                 Microbot.logStackTrace(this.getClass().getSimpleName(), ex);
             }
@@ -105,28 +107,19 @@ public class ThreeTickHunterScript extends Script {
     @Override
     public void shutdown() {
         super.shutdown();
-        currentState = State.IDLE;
+        currentState = State.STOPPED;
         Rs2Antiban.resetAntibanSettings();
-    }
-
-    private void determineState() {
-        if (countAllTraps() < getMaxTraps()) {
-            currentState = State.SETTING_UP_TRAPS;
-        } else {
-            currentState = State.THREE_TICK_HUNTING;
-        }
     }
 
     private void initializeTrapLocations() {
         if (patternCenterTile == null) return;
         trapLocations.clear();
-        // NEU: Koordinaten für das X-Muster
         trapLocations.addAll(Arrays.asList(
-                patternCenterTile.dx(-1).dy(1),  // oben links
-                patternCenterTile.dx(1).dy(1),   // oben rechts
-                patternCenterTile,                       // ZENTRUM
-                patternCenterTile.dx(-1).dy(-1), // unten links
-                patternCenterTile.dx(1).dy(-1)  // unten rechts
+                patternCenterTile.dx(-1).dy(1),
+                patternCenterTile.dx(1).dy(1),
+                patternCenterTile,
+                patternCenterTile.dx(-1).dy(-1),
+                patternCenterTile.dx(1).dy(-1)
         ));
         Microbot.log("X-pattern trap locations initialized around: " + patternCenterTile);
     }
@@ -135,7 +128,6 @@ public class ThreeTickHunterScript extends Script {
         if (Rs2Player.isAnimating() || operatingTile == null) return false;
         if (countAllTraps() >= getMaxTraps() || !Rs2Inventory.hasItem(BOX_TRAP_ITEM_ID)) return false;
 
-        // Sicherheits-Check: Stelle sicher, dass der Spieler sich nicht vom Startpunkt wegbewegt hat
         if (!Rs2Player.getWorldLocation().equals(operatingTile)) {
             Microbot.log("Player has moved from the operating tile. Stopping script for safety.");
             this.shutdown();
@@ -162,27 +154,6 @@ public class ThreeTickHunterScript extends Script {
             }
         });
         return nextSpot.isPresent();
-    }
-
-    private void handleThreeTickCycle(ThreeTickHunterConfig config) {
-        if (tickCounter % 3 == 0) {
-            if (!handleFinishedTraps()) {
-                handleTrapPlacement();
-            }
-        } else if (tickCounter % 3 == 1) {
-            performTickManipulation(config);
-        }
-        tickCounter = (tickCounter + 1) % 3;
-    }
-
-    private void performTickManipulation(ThreeTickHunterConfig config) {
-        if (config.tickMethod() == ThreeTickHunterConfig.TickManipulationMethod.TEAK_LOGS) {
-            if (Rs2Inventory.hasItem(946) && Rs2Inventory.hasItem(6333)) {
-                Rs2Inventory.interact(6333, "Use");
-                sleep(50, 100);
-                Rs2Inventory.interact(946, "Use");
-            }
-        }
     }
 
     private boolean handleFinishedTraps() {
@@ -238,4 +209,5 @@ public class ThreeTickHunterScript extends Script {
         Rs2AntibanSettings.actionCooldownChance = 0.35;
         Rs2AntibanSettings.usePlayStyle = true;
     }
+
 }
