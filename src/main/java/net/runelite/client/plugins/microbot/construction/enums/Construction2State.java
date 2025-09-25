@@ -1,10 +1,8 @@
 package net.runelite.client.plugins.microbot.construction.enums;
 
-public enum ConstructionState {
+public enum Construction2State {
+    Idle,
     Build,
     Remove,
-    Butler,
-    Idle,
-    Stopped,
-    Starting
+    Butler
 }
