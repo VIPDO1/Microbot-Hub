@@ -4,10 +4,10 @@ import net.runelite.api.Point;
 import net.runelite.api.*;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.client.plugins.microbot.thieving.summergarden.ElementalCollisionDetector;
-import net.runelite.client.plugins.microbot.thieving.summergarden.ShowNumbers;
-import net.runelite.client.plugins.microbot.thieving.summergarden.SummerGardenConfig;
-import net.runelite.client.plugins.microbot.thieving.summergarden.SummerGardenPlugin;
+import  net.runelite.client.plugins.microbot.summergarden.ElementalCollisionDetector;
+import  net.runelite.client.plugins.microbot.summergarden.ShowNumbers;
+import  net.runelite.client.plugins.microbot.summergarden.SummerGardenConfig;
+import  net.runelite.client.plugins.microbot.summergarden.SummerGardenPlugin;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.OverlayUtil;
@@ -23,7 +23,7 @@ public class SummerGardenOverlay extends Overlay
 
     private final Client client;
     private final SummerGardenPlugin plugin;
-    private final net.runelite.client.plugins.microbot.thieving.summergarden.SummerGardenConfig config;
+    private final  net.runelite.client.plugins.microbot.summergarden.SummerGardenConfig config;
     private final ElementalCollisionDetector collisionDetector;
 
     private static final WorldPoint START_POINT_REGULAR_START = new WorldPoint(2908, 5482, 0);

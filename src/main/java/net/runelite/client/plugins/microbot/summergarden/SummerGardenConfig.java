@@ -2,8 +2,8 @@ package net.runelite.client.plugins.microbot.summergarden;
 
 import net.runelite.api.SoundEffectVolume;
 import net.runelite.client.config.*;
-import net.runelite.client.plugins.microbot.thieving.summergarden.ShowNumbers;
-import net.runelite.client.plugins.microbot.thieving.summergarden.SummerGardenPlugin;
+import net.runelite.client.plugins.microbot.summergarden.ShowNumbers;
+import net.runelite.client.plugins.microbot.summergarden.SummerGardenPlugin;
 
 import java.awt.*;
 

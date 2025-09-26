@@ -1,7 +1,7 @@
 package net.runelite.client.plugins.microbot.pyrefox;
 
 import net.runelite.client.config.*;
-import net.runelite.client.plugins.microbot.kaas.pyrefox.enums.MeatPouch;
+import net.runelite.client.plugins.microbot.pyrefox.enums.MeatPouch;
 import net.runelite.client.plugins.microbot.util.misc.Rs2Food;
 
 @ConfigGroup("kaas-pyrefox")

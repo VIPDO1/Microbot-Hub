@@ -5,10 +5,10 @@ import net.runelite.api.Skill;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.kaas.pyrefox.PyreFoxConfig;
-import net.runelite.client.plugins.microbot.kaas.pyrefox.PyreFoxConstants;
-import net.runelite.client.plugins.microbot.kaas.pyrefox.PyreFoxPlugin;
-import net.runelite.client.plugins.microbot.kaas.pyrefox.enums.PyreFoxState;
+import net.runelite.client.plugins.microbot.pyrefox.PyreFoxConfig;
+import net.runelite.client.plugins.microbot.pyrefox.PyreFoxConstants;
+import net.runelite.client.plugins.microbot.pyrefox.PyreFoxPlugin;
+import net.runelite.client.plugins.microbot.pyrefox.enums.PyreFoxState;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -16,7 +16,7 @@ import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 
 import java.util.concurrent.TimeUnit;
 
-import static net.runelite.client.plugins.microbot.kaas.pyrefox.enums.PyreFoxState.*;
+import static net.runelite.client.plugins.microbot.pyrefox.enums.PyreFoxState.*;
 
 @Slf4j
 public class PyreFoxStateManager extends Script

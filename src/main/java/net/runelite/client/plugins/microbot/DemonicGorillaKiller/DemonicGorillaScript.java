@@ -4,10 +4,9 @@ import net.runelite.api.HeadIcon;
 import net.runelite.api.Skill;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
+import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.qualityoflife.QoLPlugin;
-import net.runelite.client.plugins.microbot.qualityoflife.QoLScript;
 import net.runelite.client.plugins.microbot.util.Rs2InventorySetup;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
@@ -149,10 +148,11 @@ public class DemonicGorillaScript extends Script {
         rangeGear = new Rs2InventorySetup(config.rangeGear(), mainScheduledFuture);
         magicGear = new Rs2InventorySetup(config.magicGear(), mainScheduledFuture);
         meleeGear = new Rs2InventorySetup(config.meleeGear(), mainScheduledFuture);
-        var isQoLEnabled = Microbot.getActiveScripts().stream().anyMatch(x -> x instanceof QoLScript);
-        if (isQoLEnabled) {
-            Microbot.log("QoL script interferes with banking when using inventory setups, disabling QoL.");
-            Microbot.stopPlugin(QoLPlugin.class);
+        Plugin qolPlugin = Microbot.getActiveMicrobotPlugins().stream().filter(p -> p.getClass().getSimpleName().contains("QoLPlugin"))
+                .findFirst().orElse(null);
+
+        if (qolPlugin != null) {
+            Microbot.stopPlugin(qolPlugin.getClass());
         }
     }
 

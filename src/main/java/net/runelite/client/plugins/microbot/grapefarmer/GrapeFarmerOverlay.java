@@ -1,7 +1,7 @@
 package net.runelite.client.plugins.microbot.grapefarmer;
 
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.liftedmango.grapefarmer.GrapeFarmerPlugin;
+import net.runelite.client.plugins.microbot.grapefarmer.GrapeFarmerPlugin;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;

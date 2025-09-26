@@ -2,8 +2,8 @@ package net.runelite.client.plugins.microbot.mining.requirements;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.plugins.microbot.mining.AutoMiningConfig;
-import net.runelite.client.plugins.microbot.mining.amethyst.AmethystMiningConfig;
-import net.runelite.client.plugins.microbot.mining.enums.Rocks;
+import net.runelite.client.plugins.microbot.mining.data.MiningRockLocations;
+import net.runelite.client.plugins.microbot.mining.data.Rocks;
 import net.runelite.client.plugins.microbot.pluginscheduler.tasks.requirements.PrePostScheduleRequirements;
 import net.runelite.client.plugins.microbot.pluginscheduler.tasks.requirements.data.ItemRequirementCollection;
 import net.runelite.client.plugins.microbot.pluginscheduler.tasks.requirements.enums.RequirementPriority;
@@ -11,7 +11,6 @@ import net.runelite.client.plugins.microbot.pluginscheduler.tasks.requirements.e
 import net.runelite.client.plugins.microbot.pluginscheduler.tasks.requirements.requirement.location.LocationOption;
 import net.runelite.client.plugins.microbot.pluginscheduler.tasks.requirements.requirement.location.LocationRequirement;
 import net.runelite.client.plugins.microbot.util.bank.enums.BankLocation;
-import net.runelite.client.plugins.microbot.util.skills.mining.data.MiningRockLocations;
 
 import java.util.List;
 
@@ -23,22 +22,10 @@ import java.util.List;
  */
 @Slf4j
 public class MiningPrePostScheduleRequirements extends PrePostScheduleRequirements {
-    final AmethystMiningConfig amethystMiningConfig;
     final AutoMiningConfig autoMiningConfig;
-    
-    public MiningPrePostScheduleRequirements(AmethystMiningConfig config) {
-        super("Mining", "Mining", false);
-        this.amethystMiningConfig = config;
-        this.autoMiningConfig = null;
-        //TODO Set location pre-schedule requirements - near mining spots for amethyst
 
-        
-        initializeRequirements();
-    }
-    
     public MiningPrePostScheduleRequirements(AutoMiningConfig config) {
         super("Mining", "Mining", false);
-        this.amethystMiningConfig = null;
         this.autoMiningConfig = config;
         initializeRequirements();
     }

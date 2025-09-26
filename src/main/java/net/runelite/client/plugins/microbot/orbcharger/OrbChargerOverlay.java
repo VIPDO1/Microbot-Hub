@@ -1,7 +1,7 @@
 package net.runelite.client.plugins.microbot.orbcharger;
 
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerPlugin;
+import net.runelite.client.plugins.microbot.orbcharger.OrbChargerPlugin;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;

@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static net.runelite.client.plugins.microbot.RoyalTitans.RoyalTitansShared.evaluateAndConsumePotions;
-import static net.runelite.client.plugins.microbot.TaF.RoyalTitans.RoyalTitansShared.*;
+import static net.runelite.client.plugins.microbot.RoyalTitans.RoyalTitansShared.*;
 import static net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity.EXTREME;
 import static net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer.disableAllPrayers;
 

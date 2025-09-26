@@ -3,8 +3,6 @@ package net.runelite.client.plugins.microbot.gotr.data;
 
 import lombok.Getter;
 import net.runelite.api.QuestState;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.data.CellType;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.data.RuneType;
 
 public class GuardianPortalInfo {
     @Getter
@@ -15,8 +13,8 @@ public class GuardianPortalInfo {
     private int talismanId;
     @Getter
     private int spriteId;
-    private net.runelite.client.plugins.microbot.runecrafting.gotr.data.RuneType runeType;
-    private net.runelite.client.plugins.microbot.runecrafting.gotr.data.CellType cellType;
+    private RuneType runeType;
+    private CellType cellType;
 
     @Getter
     private QuestState questState;

@@ -1,8 +1,8 @@
 package net.runelite.client.plugins.microbot.microhunter;
 
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.hunter.AutoHunterPlugin;
-import net.runelite.client.plugins.microbot.hunter.scripts.AutoChinScript;
+import net.runelite.client.plugins.microbot.microhunter.AutoHunterPlugin;
+import net.runelite.client.plugins.microbot.microhunter.scripts.AutoChinScript;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -25,7 +25,7 @@ public class AutoHunterOverlay extends OverlayPanel {
         try {
             panelComponent.setPreferredSize(new Dimension(200, 300));
             panelComponent.getChildren().add(TitleComponent.builder()
-                    .text("Micro Auto Hunter " + AutoChinScript.version)
+                    .text("Micro Auto Hunter " + AutoHunterPlugin.version)
                     .color(Color.GREEN)
                     .build());
 

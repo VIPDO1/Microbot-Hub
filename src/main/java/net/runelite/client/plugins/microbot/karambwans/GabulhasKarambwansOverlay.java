@@ -1,8 +1,8 @@
 package net.runelite.client.plugins.microbot.karambwans;
 
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.gabplugs.karambwans.GabulhasKarambwansInfo;
-import net.runelite.client.plugins.microbot.gabplugs.karambwans.GabulhasKarambwansPlugin;
+import net.runelite.client.plugins.microbot.karambwans.GabulhasKarambwansInfo;
+import net.runelite.client.plugins.microbot.karambwans.GabulhasKarambwansPlugin;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.TitleComponent;

@@ -1,7 +1,7 @@
 package net.runelite.client.plugins.microbot.pumper;
 
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.liftedmango.pumper.PumperPlugin;
+import net.runelite.client.plugins.microbot.pumper.PumperPlugin;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;

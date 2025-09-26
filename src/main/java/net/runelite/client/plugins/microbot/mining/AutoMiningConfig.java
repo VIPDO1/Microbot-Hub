@@ -1,7 +1,7 @@
 package net.runelite.client.plugins.microbot.mining;
 
 import net.runelite.client.config.*;
-import net.runelite.client.plugins.microbot.mining.enums.Rocks;
+import net.runelite.client.plugins.microbot.mining.data.Rocks;
 import net.runelite.client.plugins.microbot.util.inventory.InteractOrder;
 
 @ConfigGroup("Mining")

@@ -4,8 +4,8 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.Range;
-import net.runelite.client.plugins.microbot.TaF.AmmoniteCrabs.enums.AmmoniteCrabLocations;
-import net.runelite.client.plugins.microbot.TaF.AmmoniteCrabs.enums.OffensivePotions;
+import net.runelite.client.plugins.microbot.AmmoniteCrabs.enums.AmmoniteCrabLocations;
+import net.runelite.client.plugins.microbot.AmmoniteCrabs.enums.OffensivePotions;
 import net.runelite.client.plugins.microbot.util.misc.Rs2Food;
 
 @ConfigGroup("AmmoniteCrabConfig")

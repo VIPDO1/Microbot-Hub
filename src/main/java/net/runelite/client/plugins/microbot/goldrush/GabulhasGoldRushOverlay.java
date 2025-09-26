@@ -1,7 +1,5 @@
 package net.runelite.client.plugins.microbot.goldrush;
 
-import net.runelite.client.plugins.microbot.gabplugs.goldrush.GabulhasGoldRushInfo;
-import net.runelite.client.plugins.microbot.gabplugs.goldrush.GabulhasGoldRushPlugin;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.TitleComponent;

@@ -4,8 +4,8 @@ import net.runelite.api.GameObject;
 import net.runelite.api.NPC;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.widgets.Widget;
-import net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Config;
-import net.runelite.client.plugins.microbot.GeoffPlugins.construction2.enums.Construction2State;
+import net.runelite.client.plugins.microbot.construction.ConstructionConfig;
+import net.runelite.client.plugins.microbot.construction.enums.ConstructionState;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.globval.enums.InterfaceTab;
@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 public class ConstructionScript extends Script {
 
     private static final int DEFAULT_DELAY = 600;
-    private Construction2State state = Construction2State.Idle;
+    private ConstructionState state = ConstructionState.Idle;
     private WorldPoint workingTile = null;
 
     // NOTE: For the arrays below, the first ID is the BUILD OBJECT ID, the second is the EMPTY OBJECT ID
@@ -96,7 +96,7 @@ public class ConstructionScript extends Script {
         return Rs2Widget.findWidget("Really remove it?", null) != null;
     }
 
-    public boolean run(net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Config config) {
+    public boolean run(net.runelite.client.plugins.microbot.construction.ConstructionConfig config) {
         int actionDelay = config.useCustomDelay() ? config.actionDelay() : DEFAULT_DELAY;
 
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
@@ -131,7 +131,7 @@ public class ConstructionScript extends Script {
         super.shutdown();
     }
 
-    public void grabPlanksWhileWeBuild(net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Config config, int actionDelay){
+    public void grabPlanksWhileWeBuild(net.runelite.client.plugins.microbot.construction.ConstructionConfig config, int actionDelay){
         if(getButler() != null) {
             sleepUntil(()-> getButler() != null && getButler().isInteractingWithPlayer(), Rs2Random.between(750,1500));
             if(!getButler().isInteractingWithPlayer()){
@@ -142,7 +142,7 @@ public class ConstructionScript extends Script {
         }
     }
 
-    private void calculateState(net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Config config) {
+    private void calculateState(net.runelite.client.plugins.microbot.construction.ConstructionConfig config) {
         boolean hasRequiredPlanks;
         NPC butler = getButler();
         List<Integer> objectIDs = List.of(0);
@@ -175,13 +175,13 @@ public class ConstructionScript extends Script {
         }
 
         if (objOnWorkingTile.getId() == objectIDs.get(0)) {
-            state = Construction2State.Remove;
+            state = ConstructionState.Remove;
         } else if (objOnWorkingTile.getId() == objectIDs.get(1) && hasRequiredPlanks) {
-            state = Construction2State.Build;
+            state = ConstructionState.Build;
         } else if (objOnWorkingTile.getId() == objectIDs.get(1) && butler != null) {
-            state = Construction2State.Butler;
+            state = ConstructionState.Butler;
         } else if (!objectIDs.contains(objOnWorkingTile.getId())) {
-            state = Construction2State.Idle;
+            state = ConstructionState.Idle;
             Microbot.getNotifier().notify("Looks like we are no longer in our house.");
             returnToTheHouse();
         }
@@ -202,7 +202,7 @@ public class ConstructionScript extends Script {
         }
     }
 
-    private void buildSpace(net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Config config, int actionDelay) {
+    private void buildSpace(net.runelite.client.plugins.microbot.construction.ConstructionConfig config, int actionDelay) {
         GameObject space = Rs2GameObject.getGameObject(workingTile);
         int spaceId = space != null ? space.getId() : -1;
         char buildKey = '1';
@@ -237,7 +237,7 @@ public class ConstructionScript extends Script {
         }
     }
 
-    private void removeSpace(net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Config config, int actionDelay) {
+    private void removeSpace(net.runelite.client.plugins.microbot.construction.ConstructionConfig config, int actionDelay) {
         GameObject builtObject = Rs2GameObject.getGameObject(workingTile);
         int spaceId = builtObject != null ? builtObject.getId() : -1;
 
@@ -255,7 +255,7 @@ public class ConstructionScript extends Script {
         }
     }
 
-    private void butler(net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Config config, int actionDelay) {
+    private void butler(net.runelite.client.plugins.microbot.construction.ConstructionConfig config, int actionDelay) {
         var butler = getButler();
         if (butler == null) return;
         boolean butlerIsInteracting = butler.isInteractingWithPlayer();
@@ -302,7 +302,7 @@ public class ConstructionScript extends Script {
         }
     }
 
-    private boolean hasRemoveInterfaceOpen(Construction2Config config) {
+    private boolean hasRemoveInterfaceOpen(ConstructionConfig config) {
         switch (config.selectedMode()) {
             case OAK_DUNGEON_DOOR:
                 return hasRemoveDoorInterfaceOpen();
@@ -317,7 +317,7 @@ public class ConstructionScript extends Script {
         }
     }
 
-    public Construction2State getState() {
+    public ConstructionState getState() {
         return state;
     }
 }

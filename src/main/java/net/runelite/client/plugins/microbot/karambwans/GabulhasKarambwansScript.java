@@ -19,8 +19,8 @@ import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 
 import java.util.concurrent.TimeUnit;
 
-import static net.runelite.client.plugins.microbot.gabplugs.karambwans.GabulhasKarambwansInfo.botStatus;
-import static net.runelite.client.plugins.microbot.gabplugs.karambwans.GabulhasKarambwansInfo.states;
+import static net.runelite.client.plugins.microbot.karambwans.GabulhasKarambwansInfo.botStatus;
+import static net.runelite.client.plugins.microbot.karambwans.GabulhasKarambwansInfo.states;
 
 @Slf4j
 public class GabulhasKarambwansScript extends Script {

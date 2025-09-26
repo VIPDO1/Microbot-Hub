@@ -1,6 +1,6 @@
 package net.runelite.client.plugins.microbot.construction;
 
-import net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Plugin;
+import net.runelite.client.plugins.microbot.construction.ConstructionPlugin;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.LineComponent;
@@ -11,10 +11,10 @@ import java.awt.*;
 
 public class ConstructionOverlay extends OverlayPanel {
 
-    private final net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Plugin plugin;
+    private final net.runelite.client.plugins.microbot.construction.ConstructionPlugin plugin;
 
     @Inject
-    public ConstructionOverlay(Construction2Plugin plugin) {
+    public ConstructionOverlay(ConstructionPlugin plugin) {
         this.plugin = plugin;
         setPosition(OverlayPosition.TOP_LEFT);
     }

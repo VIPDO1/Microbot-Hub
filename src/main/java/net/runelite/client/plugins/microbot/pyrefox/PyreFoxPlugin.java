@@ -9,11 +9,11 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.PluginConstants;
-import net.runelite.client.plugins.microbot.kaas.pyrefox.PyreFoxConfig;
-import net.runelite.client.plugins.microbot.kaas.pyrefox.PyreFoxOverlay;
-import net.runelite.client.plugins.microbot.kaas.pyrefox.enums.PyreFoxState;
-import net.runelite.client.plugins.microbot.kaas.pyrefox.managers.PyreFoxScript;
-import net.runelite.client.plugins.microbot.kaas.pyrefox.managers.PyreFoxStateManager;
+import net.runelite.client.plugins.microbot.pyrefox.PyreFoxConfig;
+import net.runelite.client.plugins.microbot.pyrefox.PyreFoxOverlay;
+import net.runelite.client.plugins.microbot.pyrefox.enums.PyreFoxState;
+import net.runelite.client.plugins.microbot.pyrefox.managers.PyreFoxScript;
+import net.runelite.client.plugins.microbot.pyrefox.managers.PyreFoxStateManager;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.misc.TimeUtils;
 import net.runelite.client.plugins.microbot.util.npc.Rs2NpcModel;
@@ -45,11 +45,11 @@ public class PyreFoxPlugin extends Plugin {
 
 
     @Inject
-    private net.runelite.client.plugins.microbot.kaas.pyrefox.PyreFoxConfig config;
+    private net.runelite.client.plugins.microbot.pyrefox.PyreFoxConfig config;
     private Instant scriptStartTime;
 
     @Provides
-    net.runelite.client.plugins.microbot.kaas.pyrefox.PyreFoxConfig provideConfig(ConfigManager configManager) {
+    net.runelite.client.plugins.microbot.pyrefox.PyreFoxConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(PyreFoxConfig.class);
     }
 

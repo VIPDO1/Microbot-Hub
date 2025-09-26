@@ -7,7 +7,7 @@ import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.TaF.CalcifiedRockMiner.CalcifiedRockMinerConfig;
+import net.runelite.client.plugins.microbot.CalcifiedRockMiner.CalcifiedRockMinerConfig;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2Antiban;
 import net.runelite.client.plugins.microbot.util.antiban.Rs2AntibanSettings;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
@@ -27,10 +27,10 @@ import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 import java.awt.event.KeyEvent;
 import java.util.concurrent.TimeUnit;
 
-import static net.runelite.client.plugins.microbot.TaF.CalcifiedRockMiner.CalcifiedRockMinerScript.WEEPING_ROCK;
 import static net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity.VERY_LOW;
 
 public class CalcifiedRockMinerScript extends Script {
+    private final int WEEPING_ROCK = 51493;
     public static CalcifiedRockMinerState BOT_STATUS = CalcifiedRockMinerState.BANKING;
     private final WorldPoint CALCIFIED_ROCK_LOCATION = new WorldPoint(1516, 9545, 1);
     private final WorldPoint ANVIL = new WorldPoint(1447, 9584, 1);
@@ -54,7 +54,7 @@ public class CalcifiedRockMinerScript extends Script {
         Rs2Antiban.setActivityIntensity(VERY_LOW);
     }
 
-    public boolean run(net.runelite.client.plugins.microbot.TaF.CalcifiedRockMiner.CalcifiedRockMinerConfig config) {
+    public boolean run(net.runelite.client.plugins.microbot.CalcifiedRockMiner.CalcifiedRockMinerConfig config) {
         BOT_STATUS = CalcifiedRockMinerState.MINING;
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             try {
@@ -80,7 +80,7 @@ public class CalcifiedRockMinerScript extends Script {
         return true;
     }
 
-    private void handleMining(net.runelite.client.plugins.microbot.TaF.CalcifiedRockMiner.CalcifiedRockMinerConfig config) {
+    private void handleMining(net.runelite.client.plugins.microbot.CalcifiedRockMiner.CalcifiedRockMinerConfig config) {
         if (Rs2Inventory.isFull()) {
             if (config.dropDeposits()) {
                 Rs2Inventory.dropAll("Calcified deposit");
@@ -143,7 +143,7 @@ public class CalcifiedRockMinerScript extends Script {
         }
     }
 
-    private boolean hopIfTooManyPlayersNearby(net.runelite.client.plugins.microbot.TaF.CalcifiedRockMiner.CalcifiedRockMinerConfig config) {
+    private boolean hopIfTooManyPlayersNearby(net.runelite.client.plugins.microbot.CalcifiedRockMiner.CalcifiedRockMinerConfig config) {
         int maxPlayers = config.maxPlayersInArea();
         if (maxPlayers > 0) {
             WorldPoint localLocation = Rs2Player.getWorldLocation();
@@ -170,7 +170,7 @@ public class CalcifiedRockMinerScript extends Script {
         return false;
     }
 
-    private void handleCrushing(net.runelite.client.plugins.microbot.TaF.CalcifiedRockMiner.CalcifiedRockMinerConfig config) {
+    private void handleCrushing(net.runelite.client.plugins.microbot.CalcifiedRockMiner.CalcifiedRockMinerConfig config) {
         if (config.crushDeposits() && Rs2Inventory.hasItem("hammer") && Rs2Inventory.hasItem(29088)) {
             if (Rs2Player.getWorldLocation().distanceTo(ANVIL) < 1) {
                 Rs2Inventory.interact(29088, "use");

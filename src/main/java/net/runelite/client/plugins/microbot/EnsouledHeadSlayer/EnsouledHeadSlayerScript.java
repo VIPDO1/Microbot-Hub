@@ -31,10 +31,11 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static net.runelite.client.plugins.microbot.TaF.EnsouledHeadSlayer.EnsouledHeadSlayerScript.*;
+import static net.runelite.client.plugins.microbot.EnsouledHeadSlayer.EnsouledHeadSlayerScript.*;
 import static net.runelite.client.plugins.microbot.util.antiban.enums.ActivityIntensity.MODERATE;
 
 public class EnsouledHeadSlayerScript extends Script {
+    public static final int ENSOULED_GROUND_GRAPHICS = 1290;
     public EnsouledHeadSlayerStatus BOT_STATE = EnsouledHeadSlayerStatus.BANKING;
     public final WorldPoint ALTAR_LOCATION = new WorldPoint(1711, 3882, 0);
     private Rs2InventorySetup inventorySetup = null;

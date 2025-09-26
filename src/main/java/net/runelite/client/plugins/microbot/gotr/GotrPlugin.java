@@ -17,6 +17,8 @@ import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.PluginConstants;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerPlugin;
 import net.runelite.client.plugins.microbot.breakhandler.BreakHandlerScript;
+import net.runelite.client.plugins.microbot.gotr.requirement.GotrPrePostScheduleRequirements;
+import net.runelite.client.plugins.microbot.gotr.tasks.GotrPrePostScheduleTasks;
 import net.runelite.client.plugins.microbot.pluginscheduler.api.SchedulablePlugin;
 import net.runelite.client.plugins.microbot.pluginscheduler.condition.logical.AndCondition;
 import net.runelite.client.plugins.microbot.pluginscheduler.condition.logical.LockCondition;
@@ -24,13 +26,7 @@ import net.runelite.client.plugins.microbot.pluginscheduler.condition.logical.Lo
 import net.runelite.client.plugins.microbot.pluginscheduler.event.PluginScheduleEntryPostScheduleTaskEvent;
 import net.runelite.client.plugins.microbot.pluginscheduler.event.PluginScheduleEntryPreScheduleTaskEvent;
 import net.runelite.client.plugins.microbot.pluginscheduler.tasks.AbstractPrePostScheduleTasks;
-import net.runelite.client.plugins.microbot.qualityoflife.scripts.pouch.PouchOverlay;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.GotrConfig;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.GotrOverlay;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.requirement.GotrPrePostScheduleRequirements;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.tasks.GotrPrePostScheduleTasks;
+import net.runelite.client.plugins.microbot.pouch.PouchOverlay;
 import net.runelite.client.plugins.microbot.util.Global;
 import net.runelite.client.plugins.microbot.util.math.Rs2Random;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -57,11 +53,11 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
     public static final String version = "1.2.1";
 
     @Inject
-    private net.runelite.client.plugins.microbot.runecrafting.gotr.GotrConfig config;
+    private GotrConfig config;
 
     @Provides
-    net.runelite.client.plugins.microbot.runecrafting.gotr.GotrConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(net.runelite.client.plugins.microbot.runecrafting.gotr.GotrConfig.class);
+    GotrConfig provideConfig(ConfigManager configManager) {
+        return configManager.getConfig(GotrConfig.class);
     }
 
     @Inject
@@ -71,7 +67,7 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
     @Inject
     private PouchOverlay pouchOverlay;
     @Inject
-    net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript gotrScript;
+    GotrScript gotrScript;
 
     private LockCondition lockCondition;
     private LogicalCondition stopCondition = null;
@@ -81,11 +77,11 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
     private GotrPrePostScheduleRequirements prePostScheduleRequirements = null;
     private GotrPrePostScheduleTasks prePostScheduleTasks = null;
 
-    public net.runelite.client.plugins.microbot.runecrafting.gotr.GotrConfig getConfig() {
+    public GotrConfig getConfig() {
         return config;
     }
 
-    public net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript getScript() {
+    public GotrScript getScript() {
         return gotrScript;
     }
 
@@ -148,7 +144,7 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
     @Subscribe
     public void onGameStateChanged(GameStateChanged event) {
         if (event.getGameState() == GameState.LOADING) {
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.resetPlugin();
+            GotrScript.resetPlugin();
         } else if (event.getGameState() == GameState.LOGGED_IN) {
             log.info("GameState changed to LOGGED_IN - initializing GOTR tasks");
             // Initialize Pre/Post Schedule Requirements and Tasks when game information is available
@@ -163,7 +159,7 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
                 }
             }
         } else if (event.getGameState() == GameState.LOGIN_SCREEN) {
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.isInMiniGame = false;
+            GotrScript.isInMiniGame = false;
 
             // Reset pre/post schedule tasks on logout for fresh initialization
             log.info("GameState changed to LOGIN_SCREEN - resetting GOTR tasks");
@@ -174,16 +170,16 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
     @Subscribe
     public void onNpcSpawned(NpcSpawned npcSpawned) {
         NPC npc = npcSpawned.getNpc();
-        if (npc.getId() == net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.greatGuardianId) {
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.greatGuardian = npc;
+        if (npc.getId() == GotrScript.greatGuardianId) {
+            GotrScript.greatGuardian = npc;
         }
     }
 
     @Subscribe
     public void onNpcDespawned(NpcDespawned npcDespawned) {
         NPC npc = npcDespawned.getNpc();
-        if (npc.getId() == net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.greatGuardianId) {
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.greatGuardian = null;
+        if (npc.getId() == GotrScript.greatGuardianId) {
+            GotrScript.greatGuardian = null;
         }
     }
 
@@ -197,17 +193,17 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
 
         if (msg.contains("You step through the portal")) {
             Microbot.getClient().clearHintArrow();
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.nextGameStart = Optional.empty();
+            GotrScript.nextGameStart = Optional.empty();
         }
 
         if (msg.contains("The rift becomes active!")) {
             if (Microbot.isPluginEnabled(BreakHandlerPlugin.class)) {
                 BreakHandlerScript.setLockState(true);
             }
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.nextGameStart = Optional.empty();
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.timeSincePortal = Optional.of(Instant.now());
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.isFirstPortal = true;
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.state = GotrState.ENTER_GAME;
+            GotrScript.nextGameStart = Optional.empty();
+            GotrScript.timeSincePortal = Optional.of(Instant.now());
+            GotrScript.isFirstPortal = true;
+            GotrScript.state = GotrState.ENTER_GAME;
             if (lockCondition != null) {
                 lockCondition.lock();
             }
@@ -218,17 +214,17 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
             if (lockCondition != null) {
                 lockCondition.lock();
             }
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.shouldMineGuardianRemains = true;
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.nextGameStart = Optional.of(Instant.now().plusSeconds(30));
+            GotrScript.shouldMineGuardianRemains = true;
+            GotrScript.nextGameStart = Optional.of(Instant.now().plusSeconds(30));
         } else if (msg.contains("The rift will become active in 10 seconds.")) {
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.shouldMineGuardianRemains = true;
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.nextGameStart = Optional.of(Instant.now().plusSeconds(10));
+            GotrScript.shouldMineGuardianRemains = true;
+            GotrScript.nextGameStart = Optional.of(Instant.now().plusSeconds(10));
         } else if (msg.contains("The rift will become active in 5 seconds.")) {
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.shouldMineGuardianRemains = true;
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.nextGameStart = Optional.of(Instant.now().plusSeconds(5));
+            GotrScript.shouldMineGuardianRemains = true;
+            GotrScript.nextGameStart = Optional.of(Instant.now().plusSeconds(5));
         } else if (msg.contains("The Portal Guardians will keep their rifts open for another 30 seconds.")) {
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.shouldMineGuardianRemains = true;
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.nextGameStart = Optional.of(Instant.now().plusSeconds(60));
+            GotrScript.shouldMineGuardianRemains = true;
+            GotrScript.nextGameStart = Optional.of(Instant.now().plusSeconds(60));
             if (lockCondition != null) {
                 lockCondition.unlock();
             }
@@ -240,14 +236,14 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
             if (lockCondition != null) {
                 lockCondition.unlock();
             }
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.shouldMineGuardianRemains = true;
+            GotrScript.shouldMineGuardianRemains = true;
 
         }
 
-        Matcher rewardPointMatcher = net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.rewardPointPattern.matcher(msg);
+        Matcher rewardPointMatcher = GotrScript.rewardPointPattern.matcher(msg);
         if (rewardPointMatcher.find()) {
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.elementalRewardPoints = Integer.parseInt(rewardPointMatcher.group(1).replaceAll(",", ""));
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.catalyticRewardPoints = Integer.parseInt(rewardPointMatcher.group(2).replaceAll(",", ""));
+            GotrScript.elementalRewardPoints = Integer.parseInt(rewardPointMatcher.group(1).replaceAll(",", ""));
+            GotrScript.catalyticRewardPoints = Integer.parseInt(rewardPointMatcher.group(2).replaceAll(",", ""));
         }
     }
 
@@ -275,16 +271,16 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
     @Subscribe
     public void onGameObjectSpawned(GameObjectSpawned event) {
         GameObject gameObject = event.getGameObject();
-        if (net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.isGuardianPortal(gameObject)) {
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.guardians.add(gameObject);
+        if (GotrScript.isGuardianPortal(gameObject)) {
+            GotrScript.guardians.add(gameObject);
         }
 
-        if (gameObject.getId() == net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.portalId) {
+        if (gameObject.getId() == GotrScript.portalId) {
             Microbot.getClient().setHintArrow(gameObject.getWorldLocation());
-            if (net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.isFirstPortal) {
-                net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.isFirstPortal = false;
+            if (GotrScript.isFirstPortal) {
+                GotrScript.isFirstPortal = false;
             }
-            net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.timeSincePortal = Optional.of(Instant.now());
+            GotrScript.timeSincePortal = Optional.of(Instant.now());
         }
     }
 
@@ -292,10 +288,10 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
     public void onGameObjectDespawned(GameObjectDespawned event) {
         GameObject gameObject = event.getGameObject();
 
-        net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.guardians.remove(gameObject);
-        net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.activeGuardianPortals.remove(gameObject);
+        GotrScript.guardians.remove(gameObject);
+        GotrScript.activeGuardianPortals.remove(gameObject);
 
-        if (gameObject.getId() == net.runelite.client.plugins.microbot.runecrafting.gotr.GotrScript.portalId) {
+        if (gameObject.getId() == GotrScript.portalId) {
             Microbot.getClient().clearHintArrow();
             GotrScript.timeSincePortal = Optional.of(Instant.now());
         }
@@ -476,7 +472,7 @@ public class GotrPlugin extends Plugin implements SchedulablePlugin {
         if (Microbot.getConfigManager() == null) {
             return null;
         }
-        net.runelite.client.plugins.microbot.runecrafting.gotr.GotrConfig conf = Microbot.getConfigManager().getConfig(GotrConfig.class);
+        GotrConfig conf = Microbot.getConfigManager().getConfig(GotrConfig.class);
         return Microbot.getConfigManager().getConfigDescriptor(conf);
     }
 

@@ -2,7 +2,7 @@ package net.runelite.client.plugins.microbot.pumper;
 
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.liftedmango.pumper.PumperConfig;
+import net.runelite.client.plugins.microbot.pumper.PumperConfig;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 

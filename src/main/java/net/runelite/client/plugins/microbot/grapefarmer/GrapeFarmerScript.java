@@ -5,7 +5,7 @@ import net.runelite.api.Varbits;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.liftedmango.grapefarmer.GrapeFarmerConfig;
+import net.runelite.client.plugins.microbot.grapefarmer.GrapeFarmerConfig;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;

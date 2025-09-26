@@ -7,10 +7,6 @@ import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.PluginManager;
 import net.runelite.client.plugins.microbot.PluginConstants;
-import net.runelite.client.plugins.microbot.gabplugs.goldrush.GabulhasGoldRushConfig;
-import net.runelite.client.plugins.microbot.gabplugs.goldrush.GabulhasGoldRushInfo;
-import net.runelite.client.plugins.microbot.gabplugs.goldrush.GabulhasGoldRushOverlay;
-import net.runelite.client.plugins.microbot.gabplugs.goldrush.GabulhasGoldRushScript;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
@@ -32,9 +28,9 @@ import java.awt.*;
 public class GabulhasGoldRushPlugin extends Plugin {
     public static final String version = "1.0.6";
     @Inject
-    private net.runelite.client.plugins.microbot.gabplugs.goldrush.GabulhasGoldRushConfig config;
+    private GabulhasGoldRushConfig config;
     @Provides
-    net.runelite.client.plugins.microbot.gabplugs.goldrush.GabulhasGoldRushConfig provideConfig(ConfigManager configManager) {
+    GabulhasGoldRushConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(GabulhasGoldRushConfig.class);
     }
 

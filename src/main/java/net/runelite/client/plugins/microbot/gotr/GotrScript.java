@@ -7,12 +7,10 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.GotrConfig;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.data.CellType;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.data.GuardianPortalInfo;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.data.Mode;
-import net.runelite.client.plugins.microbot.runecrafting.gotr.data.RuneType;
+import net.runelite.client.plugins.microbot.gotr.data.CellType;
+import net.runelite.client.plugins.microbot.gotr.data.GuardianPortalInfo;
+import net.runelite.client.plugins.microbot.gotr.data.Mode;
+import net.runelite.client.plugins.microbot.gotr.data.RuneType;
 import net.runelite.client.plugins.microbot.util.Global;
 import net.runelite.client.plugins.microbot.util.combat.Rs2Combat;
 import net.runelite.client.plugins.microbot.util.dialogues.Rs2Dialogue;
@@ -59,8 +57,8 @@ public class GotrScript extends Script {
     public static NPC greatGuardian;
     public static int elementalRewardPoints;
     public static int catalyticRewardPoints;
-    public static net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState state;
-    static net.runelite.client.plugins.microbot.runecrafting.gotr.GotrConfig config;
+    public static GotrState state;
+    static GotrConfig config;
     String GUARDIAN_FRAGMENTS = "guardian fragments";
     String GUARDIAN_ESSENCE = "guardian essence";
 
@@ -186,7 +184,7 @@ public class GotrScript extends Script {
                         if (!Rs2Inventory.isFull() && !optimizedEssenceLoop) {
                             if (leaveLargeMine()) return;
 
-                            if (state == net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.CRAFT_GUARDIAN_ESSENCE && (Rs2Player.isAnimating() || Rs2Player.isMoving())) return;
+                            if (state == GotrState.CRAFT_GUARDIAN_ESSENCE && (Rs2Player.isAnimating() || Rs2Player.isMoving())) return;
 
                             if (craftGuardianEssences()) return;
 
@@ -294,7 +292,7 @@ public class GotrScript extends Script {
 
     private boolean powerUpGreatGuardian() {
         if (Rs2Inventory.hasItem("guardian stone") && !shouldMineGuardianRemains && !isInLargeMine() && !isInHugeMine()) {
-            state = net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.POWERING_UP;
+            state = GotrState.POWERING_UP;
             Rs2Npc.interact("The great guardian", "power-up");
             log("Powering up the great guardian...");
             sleepUntil(Rs2Player::isAnimating);
@@ -364,7 +362,7 @@ public class GotrScript extends Script {
         if (availableAltar != null && !Rs2Player.isMoving()) {
             log("Entering with altar " + availableAltar.getId());
             Rs2GameObject.interact(availableAltar);
-            state = net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.ENTER_ALTAR;
+            state = GotrState.ENTER_ALTAR;
             Global.sleepUntil(() -> !isInMainRegion() || !Objects.equals(getAvailableAltars().stream().findFirst().orElse(null), availableAltar), 5000);
             sleep(Rs2Random.randomGaussian(1000, 300));
 
@@ -375,7 +373,7 @@ public class GotrScript extends Script {
 
     private boolean craftGuardianEssences() {
         if (Rs2GameObject.interact(ObjectID.WORKBENCH_43754)) {
-            state = net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.CRAFT_GUARDIAN_ESSENCE;
+            state = GotrState.CRAFT_GUARDIAN_ESSENCE;
             sleep(Rs2Random.randomGaussian(Rs2Random.between(600, 900), Rs2Random.between(150, 300)));
             log("Crafting guardian essences...");
             return true;
@@ -388,7 +386,7 @@ public class GotrScript extends Script {
             Rs2GameObject.interact(ObjectID.RUBBLE_43726);
             Rs2Player.waitForAnimation();
             log("Leaving large mine...");
-            state = net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.LEAVING_LARGE_MINE;
+            state = GotrState.LEAVING_LARGE_MINE;
             return true;
         }
         return false;
@@ -426,13 +424,13 @@ public class GotrScript extends Script {
                     sleep(Rs2Random.randomGaussian(350, 150));
                 }
                 if (Rs2Inventory.hasItem(GUARDIAN_ESSENCE)) {
-                    state = net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.CRAFTING_RUNES;
+                    state = GotrState.CRAFTING_RUNES;
                     optimizedEssenceLoop = false;
                     Rs2GameObject.interact(rcAltar.getId());
                     log("Crafting runes on altar " + rcAltar.getId());
                     sleep(Rs2Random.randomGaussian(Rs2Random.between(1000, 1500), 300));
                 } else if (!Rs2Player.isMoving()) {
-                    state = net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.LEAVING_ALTAR;
+                    state = GotrState.LEAVING_ALTAR;
                     TileObject rcPortal = findPortalToLeaveAltar();
                     if (Rs2GameObject.interact(rcPortal.getId())) {
                         log("Leaving the altar...");
@@ -450,23 +448,23 @@ public class GotrScript extends Script {
         if (!isInMainRegion()) {
             TileObject rcPortal = findPortalToLeaveAltar();
             if (rcPortal != null && Rs2GameObject.interact(rcPortal.getId())) {
-                state = net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.LEAVING_ALTAR;
+                state = GotrState.LEAVING_ALTAR;
                 return true;
             }
         }
         resetPlugin();
-        if (state != net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.WAITING) {
-            state = net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.WAITING;
+        if (state != GotrState.WAITING) {
+            state = GotrState.WAITING;
             log("Make sure to start the script near the minigame barrier.");
             Rs2GameObject.interact(ObjectID.BARRIER_43849, "Peek");
         }
-        return state == net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.WAITING;
+        return state == GotrState.WAITING;
     }
 
     private static boolean enterMinigame() {
         if (Rs2GameObject.interact(ObjectID.BARRIER_43700, "quick-pass")) {
             Rs2Player.waitForWalking();
-            state = net.runelite.client.plugins.microbot.runecrafting.gotr.GotrState.ENTER_GAME;
+            state = GotrState.ENTER_GAME;
             GotrScript.shouldMineGuardianRemains = true;
             log("Entering game...");
             return true;

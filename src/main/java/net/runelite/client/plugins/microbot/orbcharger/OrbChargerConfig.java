@@ -1,7 +1,7 @@
 package net.runelite.client.plugins.microbot.orbcharger;
 
 import net.runelite.client.config.*;
-import net.runelite.client.plugins.microbot.magic.orbcharger.enums.Teleport;
+import net.runelite.client.plugins.microbot.orbcharger.enums.Teleport;
 import net.runelite.client.plugins.microbot.util.misc.Rs2Food;
 
 @ConfigGroup(OrbChargerConfig.configGroup)

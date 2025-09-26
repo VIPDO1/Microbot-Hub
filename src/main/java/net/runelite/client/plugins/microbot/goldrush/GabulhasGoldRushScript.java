@@ -6,7 +6,6 @@ import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.Notifier;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.gabplugs.goldrush.GabulhasGoldRushConfig;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
 import net.runelite.client.plugins.microbot.util.camera.Rs2Camera;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
@@ -19,8 +18,7 @@ import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 
-import static net.runelite.client.plugins.microbot.gabplugs.goldrush.GabulhasGoldRushInfo.botStatus;
-import static net.runelite.client.plugins.microbot.gabplugs.goldrush.GabulhasGoldRushInfo.states;
+import static net.runelite.client.plugins.microbot.goldrush.GabulhasGoldRushInfo.botStatus;
 
 @Slf4j
 public class GabulhasGoldRushScript extends Script {
@@ -50,8 +48,8 @@ public class GabulhasGoldRushScript extends Script {
                         sleep(100, 1000);
                         Rs2Bank.useBank();
                         sleep(100, 1000);
-                        while(Rs2Inventory.contains("Gold bar")){
-                            if(Rs2Bank.isOpen()){
+                        while (Rs2Inventory.contains("Gold bar")) {
+                            if (Rs2Bank.isOpen()) {
                                 sleep(100, 600);
                                 Rs2Bank.depositAll("Gold bar");
                             }
@@ -59,40 +57,41 @@ public class GabulhasGoldRushScript extends Script {
                         }
 
                         sleep(100, 2000);
-                        while(!Rs2Inventory.contains("Gold ore")){
+                        while (!Rs2Inventory.contains("Gold ore")) {
                             Rs2Bank.withdrawAll("Gold ore");
                             sleep(100, 1000);
                         }
                         Rs2Bank.closeBank();
-                        if(Microbot.getClient().getEnergy() > Rs2Random.nextInt(2000, 10000, 2, true)) {
+                        if (Microbot.getClient().getEnergy() > Rs2Random.nextInt(2000, 10000, 2, true)) {
                             sleep(100, 2000);
                             Rs2Player.toggleRunEnergy(true);
                         }
-                        botStatus = states.USING_BARS;
+                        botStatus = GabulhasGoldRushInfo.states.USING_BARS;
                         break;
                     case USING_BARS:
-                        int currentXP =Microbot.getClient().getSkillExperience(Skill.SMITHING);
+                        int currentXP = Microbot.getClient().getSkillExperience(Skill.SMITHING);
                         Rs2GameObject.interact(9100, "Put-ore-on");
-                        while(Rs2Inventory.contains("Gold ore")){
+                        while (Rs2Inventory.contains("Gold ore")) {
                             sleep(100);
                         }
 
-                        Rs2Walker.walkTo(new WorldPoint(1940,4964,0));
+                        Rs2Walker.walkTo(new WorldPoint(1940, 4964, 0));
 
-                        while (Microbot.getClient().getSkillExperience(Skill.SMITHING) == currentXP){
+                        while (Microbot.getClient().getSkillExperience(Skill.SMITHING) == currentXP) {
                             sleep(100, 600);
                         }
-                        botStatus = states.RETRIEVING_BARS;
+                        botStatus = GabulhasGoldRushInfo.states.RETRIEVING_BARS;
                         break;
                     case RETRIEVING_BARS:
                         Rs2Inventory.wield("Ice gloves");
-                        Rs2GameObject.interact(9092, "Take");                            Rs2Keyboard.keyPress(' ');
-                        while(!Rs2Inventory.contains("Gold bar")){
+                        Rs2GameObject.interact(9092, "Take");
+                        Rs2Keyboard.keyPress(' ');
+                        while (!Rs2Inventory.contains("Gold bar")) {
                             Rs2Keyboard.keyPress(32);
                             sleep(100, 1000);
                         }
 
-                        botStatus = states.GETTING_BARS;
+                        botStatus = GabulhasGoldRushInfo.states.GETTING_BARS;
 
                         break;
                 }
@@ -108,7 +107,6 @@ public class GabulhasGoldRushScript extends Script {
     public void shutdown() {
         super.shutdown();
     }
-
 
 
 }

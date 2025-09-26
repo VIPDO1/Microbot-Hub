@@ -1,6 +1,5 @@
 package net.runelite.client.plugins.microbot.lunarplankmake;
 
-import net.runelite.client.plugins.microbot.GeoffPlugins.lunarplankmake.LunarPlankMakeConfig;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
 import net.runelite.client.plugins.microbot.util.bank.Rs2Bank;
@@ -32,7 +31,7 @@ public class LunarPlankMakeScript extends Script {
 
     private State currentState = State.PLANKING;
 
-    public boolean run(net.runelite.client.plugins.microbot.GeoffPlugins.lunarplankmake.LunarPlankMakeConfig config) {
+    public boolean run(LunarPlankMakeConfig config) {
         startTime = System.currentTimeMillis();
         int unprocessedItemPrice = Microbot.getItemManager().search(config.ITEM().getName()).get(0).getPrice();
         int processedItemPrice = Microbot.getItemManager().search(config.ITEM().getFinished()).get(0).getPrice();
@@ -64,7 +63,7 @@ public class LunarPlankMakeScript extends Script {
         return true;
     }
 
-    private void plankItems(net.runelite.client.plugins.microbot.GeoffPlugins.lunarplankmake.LunarPlankMakeConfig config) {
+    private void plankItems(LunarPlankMakeConfig config) {
         if (Rs2Inventory.hasItem(config.ITEM().getName(), true)) {
             int initialPlankCount = Rs2Inventory.count(config.ITEM().getFinished());
             Rs2Magic.cast(MagicAction.PLANK_MAKE);
@@ -96,7 +95,7 @@ public class LunarPlankMakeScript extends Script {
         return true;
     }
 
-    private void bank(net.runelite.client.plugins.microbot.GeoffPlugins.lunarplankmake.LunarPlankMakeConfig config) {
+    private void bank(LunarPlankMakeConfig config) {
         if (!Rs2Bank.openBank()) return;
 
         Rs2Bank.depositAll(config.ITEM().getFinished());

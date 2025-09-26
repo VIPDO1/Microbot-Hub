@@ -1,7 +1,7 @@
 package net.runelite.client.plugins.microbot.AmmoniteCrabs;
 
 import net.runelite.client.plugins.microbot.Microbot;
-import net.runelite.client.plugins.microbot.TaF.AmmoniteCrabs.enums.AmmoniteCrabState;
+import net.runelite.client.plugins.microbot.AmmoniteCrabs.enums.AmmoniteCrabState;
 import net.runelite.client.ui.overlay.OverlayPanel;
 import net.runelite.client.ui.overlay.OverlayPosition;
 import net.runelite.client.ui.overlay.components.ComponentOrientation;

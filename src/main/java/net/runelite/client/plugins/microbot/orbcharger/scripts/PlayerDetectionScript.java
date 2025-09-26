@@ -3,7 +3,7 @@ package net.runelite.client.plugins.microbot.orbcharger.scripts;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerPlugin;
+import net.runelite.client.plugins.microbot.orbcharger.OrbChargerPlugin;
 import net.runelite.client.plugins.microbot.util.player.Rs2Player;
 import net.runelite.client.plugins.microbot.util.player.Rs2PlayerModel;
 import net.runelite.client.plugins.microbot.util.player.Rs2Pvp;

@@ -9,9 +9,9 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.PluginConstants;
-import net.runelite.client.plugins.microbot.TaF.CalcifiedRockMiner.CalcifiedRockMinerConfig;
-import net.runelite.client.plugins.microbot.TaF.CalcifiedRockMiner.CalcifiedRockMinerOverlay;
-import net.runelite.client.plugins.microbot.TaF.CalcifiedRockMiner.CalcifiedRockMinerScript;
+import net.runelite.client.plugins.microbot.CalcifiedRockMiner.CalcifiedRockMinerConfig;
+import net.runelite.client.plugins.microbot.CalcifiedRockMiner.CalcifiedRockMinerOverlay;
+import net.runelite.client.plugins.microbot.CalcifiedRockMiner.CalcifiedRockMinerScript;
 import net.runelite.client.plugins.microbot.util.misc.TimeUtils;
 import net.runelite.client.ui.overlay.OverlayManager;
 
@@ -36,7 +36,7 @@ public class CalcifiedRockMinerPlugin extends Plugin {
 
     private Instant scriptStartTime;
     @Inject
-    private net.runelite.client.plugins.microbot.TaF.CalcifiedRockMiner.CalcifiedRockMinerConfig config;
+    private net.runelite.client.plugins.microbot.CalcifiedRockMiner.CalcifiedRockMinerConfig config;
     @Inject
     private OverlayManager overlayManager;
     @Inject
@@ -67,7 +67,7 @@ public class CalcifiedRockMinerPlugin extends Plugin {
     }
 
     @Provides
-    net.runelite.client.plugins.microbot.TaF.CalcifiedRockMiner.CalcifiedRockMinerConfig provideConfig(ConfigManager configManager) {
+    net.runelite.client.plugins.microbot.CalcifiedRockMiner.CalcifiedRockMinerConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(CalcifiedRockMinerConfig.class);
     }
 

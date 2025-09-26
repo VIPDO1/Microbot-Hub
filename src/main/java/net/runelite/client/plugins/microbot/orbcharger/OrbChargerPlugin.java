@@ -13,12 +13,12 @@ import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.PluginConstants;
-import net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerConfig;
-import net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerOverlay;
-import net.runelite.client.plugins.microbot.magic.orbcharger.enums.OrbChargerState;
-import net.runelite.client.plugins.microbot.magic.orbcharger.enums.Teleport;
-import net.runelite.client.plugins.microbot.magic.orbcharger.scripts.AirOrbScript;
-import net.runelite.client.plugins.microbot.magic.orbcharger.scripts.PlayerDetectionScript;
+import net.runelite.client.plugins.microbot.orbcharger.OrbChargerConfig;
+import net.runelite.client.plugins.microbot.orbcharger.OrbChargerOverlay;
+import net.runelite.client.plugins.microbot.orbcharger.enums.OrbChargerState;
+import net.runelite.client.plugins.microbot.orbcharger.enums.Teleport;
+import net.runelite.client.plugins.microbot.orbcharger.scripts.AirOrbScript;
+import net.runelite.client.plugins.microbot.orbcharger.scripts.PlayerDetectionScript;
 import net.runelite.client.plugins.microbot.util.misc.Rs2Food;
 import net.runelite.client.ui.overlay.OverlayManager;
 
@@ -43,10 +43,10 @@ public class OrbChargerPlugin extends Plugin {
     public final static String version = "1.1.0";
     
     @Inject
-    private net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerConfig config;
+    private net.runelite.client.plugins.microbot.orbcharger.OrbChargerConfig config;
     @Provides
-    net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerConfig provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerConfig.class);
+    net.runelite.client.plugins.microbot.orbcharger.OrbChargerConfig provideConfig(ConfigManager configManager) {
+        return configManager.getConfig(net.runelite.client.plugins.microbot.orbcharger.OrbChargerConfig.class);
     }
     
     @Getter
@@ -97,19 +97,19 @@ public class OrbChargerPlugin extends Plugin {
     }
     
     public void onConfigChanged(ConfigChanged event) {
-        if (!event.getGroup().equals(net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerConfig.configGroup)) return;
+        if (!event.getGroup().equals(net.runelite.client.plugins.microbot.orbcharger.OrbChargerConfig.configGroup)) return;
         
-        if (event.getKey().equals(net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerConfig.useEnergyPotions)){
+        if (event.getKey().equals(net.runelite.client.plugins.microbot.orbcharger.OrbChargerConfig.useEnergyPotions)){
             useEnergyPotions = config.useEnergyPotions();
         }
         
-        if (event.getKey().equals(net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerConfig.useStaminaPotions)){
+        if (event.getKey().equals(net.runelite.client.plugins.microbot.orbcharger.OrbChargerConfig.useStaminaPotions)){
             useStaminaPotions = config.useStaminaPotions();
         }
-        if (event.getKey().equals(net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerConfig.food)){
+        if (event.getKey().equals(net.runelite.client.plugins.microbot.orbcharger.OrbChargerConfig.food)){
             rs2Food = config.food();
         }
-        if (event.getKey().equals(net.runelite.client.plugins.microbot.magic.orbcharger.OrbChargerConfig.eatAtPercent)) {
+        if (event.getKey().equals(net.runelite.client.plugins.microbot.orbcharger.OrbChargerConfig.eatAtPercent)) {
             eatAtPercent = config.eatAtPercent();
         }
         if (event.getKey().equals(OrbChargerConfig.teleport)) {

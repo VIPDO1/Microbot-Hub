@@ -5,10 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
-import net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Config;
-import net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Overlay;
-import net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Script;
-import net.runelite.client.plugins.microbot.GeoffPlugins.construction2.enums.Construction2State;
+import net.runelite.client.plugins.microbot.construction.ConstructionConfig;
+import net.runelite.client.plugins.microbot.construction.ConstructionOverlay;
+import net.runelite.client.plugins.microbot.construction.ConstructionScript;
+import net.runelite.client.plugins.microbot.construction.enums.ConstructionState;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.PluginConstants;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -32,36 +32,36 @@ public class ConstructionPlugin extends Plugin {
     public static final String version = "1.3.1";
 
     @Inject
-    private net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Config config;
+    private net.runelite.client.plugins.microbot.construction.ConstructionConfig config;
 
     @Provides
-    net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Config provideConfig(ConfigManager configManager) {
-        return configManager.getConfig(Construction2Config.class);
+    net.runelite.client.plugins.microbot.construction.ConstructionConfig provideConfig(ConfigManager configManager) {
+        return configManager.getConfig(ConstructionConfig.class);
     }
 
     @Inject
     private OverlayManager overlayManager;
     @Inject
-    private Construction2Overlay construction2Overlay;
+    private ConstructionOverlay ConstructionOverlay;
 
-    private final net.runelite.client.plugins.microbot.GeoffPlugins.construction2.Construction2Script construction2Script = new Construction2Script();
+    private final net.runelite.client.plugins.microbot.construction.ConstructionScript ConstructionScript = new ConstructionScript();
 
     @Override
     protected void startUp() throws AWTException {
         Microbot.pauseAllScripts.compareAndSet(true, false);
         if (overlayManager != null) {
-            overlayManager.add(construction2Overlay);
+            overlayManager.add(ConstructionOverlay);
         }
-        construction2Script.run(config);
+        ConstructionScript.run(config);
     }
 
     @Override
     protected void shutDown() {
-        construction2Script.shutdown();
-        overlayManager.remove(construction2Overlay);
+        ConstructionScript.shutdown();
+        overlayManager.remove(ConstructionOverlay);
     }
 
-    public Construction2State getState() {
-        return construction2Script.getState();
+    public ConstructionState getState() {
+        return ConstructionScript.getState();
     }
 }

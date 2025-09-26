@@ -17,10 +17,10 @@ import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.PluginConstants;
-import net.runelite.client.plugins.microbot.thieving.summergarden.ElementalCollisionDetector;
-import net.runelite.client.plugins.microbot.thieving.summergarden.SummerGardenConfig;
-import net.runelite.client.plugins.microbot.thieving.summergarden.SummerGardenOverlay;
-import net.runelite.client.plugins.microbot.thieving.summergarden.SummerGardenScript;
+import  net.runelite.client.plugins.microbot.summergarden.ElementalCollisionDetector;
+import  net.runelite.client.plugins.microbot.summergarden.SummerGardenConfig;
+import  net.runelite.client.plugins.microbot.summergarden.SummerGardenOverlay;
+import  net.runelite.client.plugins.microbot.summergarden.SummerGardenScript;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.ui.overlay.infobox.InfoBox;
 import net.runelite.client.ui.overlay.infobox.InfoBoxManager;
@@ -62,7 +62,7 @@ public class SummerGardenPlugin extends Plugin
     private SummerGardenOverlay overlay;
 
     @Inject
-    public net.runelite.client.plugins.microbot.thieving.summergarden.SummerGardenConfig config;
+    public  net.runelite.client.plugins.microbot.summergarden.SummerGardenConfig config;
 
     public static final String CONFIG_GROUP = "oneclicksummergarden";
     public static final String CONFIG_KEY_GATE_START = "useGateStartPoint";
@@ -281,7 +281,7 @@ public class SummerGardenPlugin extends Plugin
     }
 
     @Provides
-    net.runelite.client.plugins.microbot.thieving.summergarden.SummerGardenConfig provideConfig(ConfigManager configManager)
+     net.runelite.client.plugins.microbot.summergarden.SummerGardenConfig provideConfig(ConfigManager configManager)
     {
         return configManager.getConfig(SummerGardenConfig.class);
     }

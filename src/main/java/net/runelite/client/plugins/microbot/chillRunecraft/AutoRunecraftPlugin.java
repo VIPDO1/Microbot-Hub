@@ -8,9 +8,9 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.PluginConstants;
-import net.runelite.client.plugins.microbot.runecrafting.chillRunecraft.AutoRunecraftConfig;
-import net.runelite.client.plugins.microbot.runecrafting.chillRunecraft.AutoRunecraftOverlay;
-import net.runelite.client.plugins.microbot.runecrafting.chillRunecraft.AutoRunecraftScript;
+import net.runelite.client.plugins.microbot.chillRunecraft.AutoRunecraftConfig;
+import net.runelite.client.plugins.microbot.chillRunecraft.AutoRunecraftOverlay;
+import net.runelite.client.plugins.microbot.chillRunecraft.AutoRunecraftScript;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;

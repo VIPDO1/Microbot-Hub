@@ -8,8 +8,8 @@ import net.runelite.api.widgets.Widget;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.plugins.microbot.Microbot;
 import net.runelite.client.plugins.microbot.Script;
-import net.runelite.client.plugins.microbot.thieving.summergarden.ElementalCollisionDetector;
-import net.runelite.client.plugins.microbot.thieving.summergarden.SummerGardenConfig;
+import  net.runelite.client.plugins.microbot.summergarden.ElementalCollisionDetector;
+import  net.runelite.client.plugins.microbot.summergarden.SummerGardenConfig;
 import net.runelite.client.plugins.microbot.util.gameobject.Rs2GameObject;
 import net.runelite.client.plugins.microbot.util.grounditem.Rs2GroundItem;
 import net.runelite.client.plugins.microbot.util.inventory.Rs2Inventory;
@@ -56,7 +56,7 @@ public class SummerGardenScript extends Script {
     public boolean sendRs2InventoryFullNotification = false;
     private BotState botState = BotState.RUN;
 
-    public boolean run(net.runelite.client.plugins.microbot.thieving.summergarden.SummerGardenConfig config) {
+    public boolean run( net.runelite.client.plugins.microbot.summergarden.SummerGardenConfig config) {
         mainScheduledFuture = scheduledExecutorService.scheduleWithFixedDelay(() -> {
             if (!super.run()) return;
             try {

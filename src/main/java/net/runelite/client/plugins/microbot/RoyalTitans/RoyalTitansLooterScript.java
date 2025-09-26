@@ -14,7 +14,7 @@ import javax.inject.Inject;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
-import static net.runelite.client.plugins.microbot.TaF.RoyalTitans.RoyalTitansShared.*;
+import static net.runelite.client.plugins.microbot.RoyalTitans.RoyalTitansShared.*;
 
 
 public class RoyalTitansLooterScript extends Script {

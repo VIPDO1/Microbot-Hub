@@ -8,9 +8,9 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.PluginConstants;
-import net.runelite.client.plugins.microbot.liftedmango.grapefarmer.GrapeFarmerConfig;
-import net.runelite.client.plugins.microbot.liftedmango.grapefarmer.GrapeFarmerOverlay;
-import net.runelite.client.plugins.microbot.liftedmango.grapefarmer.GrapeFarmerScript;
+import net.runelite.client.plugins.microbot.grapefarmer.GrapeFarmerConfig;
+import net.runelite.client.plugins.microbot.grapefarmer.GrapeFarmerOverlay;
+import net.runelite.client.plugins.microbot.grapefarmer.GrapeFarmerScript;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
@@ -31,9 +31,9 @@ import java.awt.*;
 public class GrapeFarmerPlugin extends Plugin {
     public static final String version = "1.0.0";
     @Inject
-    private net.runelite.client.plugins.microbot.liftedmango.grapefarmer.GrapeFarmerConfig config;
+    private net.runelite.client.plugins.microbot.grapefarmer.GrapeFarmerConfig config;
     @Provides
-    net.runelite.client.plugins.microbot.liftedmango.grapefarmer.GrapeFarmerConfig provideConfig(ConfigManager configManager) {
+    net.runelite.client.plugins.microbot.grapefarmer.GrapeFarmerConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(GrapeFarmerConfig.class);
     }
 

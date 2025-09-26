@@ -8,9 +8,9 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.plugins.microbot.PluginConstants;
-import net.runelite.client.plugins.microbot.liftedmango.pumper.PumperConfig;
-import net.runelite.client.plugins.microbot.liftedmango.pumper.PumperOverlay;
-import net.runelite.client.plugins.microbot.liftedmango.pumper.PumperScript;
+import net.runelite.client.plugins.microbot.pumper.PumperConfig;
+import net.runelite.client.plugins.microbot.pumper.PumperOverlay;
+import net.runelite.client.plugins.microbot.pumper.PumperScript;
 import net.runelite.client.ui.overlay.OverlayManager;
 
 import javax.inject.Inject;
