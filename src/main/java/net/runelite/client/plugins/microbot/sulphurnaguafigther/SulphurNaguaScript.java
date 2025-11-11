@@ -216,7 +216,6 @@ public class SulphurNaguaScript extends Script {
 
         if (potionsToPickup > 0 && pickupReady) {
             if (Rs2Inventory.isFull()) {
-                Microbot.log("Inventory is full, cannot pick up remaining potions. Starting to fight.");
 
                 resetPreparationState();
                 currentState = inCombatZone ? SulphurNaguaState.FIGHTING : SulphurNaguaState.WALKING_TO_FIGHT;
@@ -249,11 +248,10 @@ public class SulphurNaguaScript extends Script {
         if (totalOwnedPotions < targetPotions || hasIntermediateIngredients) {
             if (currentState == SulphurNaguaState.FIGHTING) {
                 Rs2Prayer.disableAllPrayers();
-                Microbot.log("All potions used. Starting preparation for a new batch.");
+
             }
 
             if (config.changeInSulphurousEssence() && Rs2Inventory.hasItem(SULPHUROUS_ESSENCE_ID) && totalOwnedPotions == 0) {
-                Microbot.log("No potions left. Exchanging Sulphurous Essence for XP.");
                 currentState = SulphurNaguaState.GETTING_RUNE_CRAFTING_XP;
                 return;
             }
@@ -300,10 +298,8 @@ public class SulphurNaguaScript extends Script {
 
                     int potionsToDrop = Math.min(grubsToGet, currentPotions);
                     if (potionsToDrop <= 0) {
-                        Microbot.log("Stuck: 0 free slots, 0 potions to drop, but need grubs.");
                         return;
                     }
-                    Microbot.log("Dropping " + potionsToDrop + " potions to make space for grubs.");
                     dropPotions(potionsToDrop);
                 }
             }
@@ -317,11 +313,8 @@ public class SulphurNaguaScript extends Script {
         } else {
             int potionsToDrop = Math.min(neededPotionsTotal, currentPotions);
             if (potionsToDrop <= 0 && neededPotionsTotal > 0) {
-                Microbot.log("Stuck: 0 free slots, 0 vials, 0 potions to drop, but need more potions.");
                 return;
             }
-
-            Microbot.log("Dropping " + potionsToDrop + " potions to make space for vials.");
             dropPotions(potionsToDrop);
         }
     }
@@ -331,7 +324,6 @@ public class SulphurNaguaScript extends Script {
             return;
         }
         if (Rs2Inventory.hasItem(MOONLIGHT_GRUB_ID)) {
-            Microbot.log("Grinding all available grubs...");
             Rs2Inventory.use(PESTLE_AND_MORTAR_ID);
             sleep(100, 150);
             Rs2Inventory.use(MOONLIGHT_GRUB_ID);
@@ -340,7 +332,6 @@ public class SulphurNaguaScript extends Script {
             return;
         }
         if (Rs2Inventory.hasItem(MOONLIGHT_GRUB_PASTE_ID) && Rs2Inventory.hasItem(VIAL_OF_WATER_ID)) {
-            Microbot.log("Mixing all available paste...");
             Rs2Inventory.use(MOONLIGHT_GRUB_PASTE_ID);
             sleep(100, 150);
             Rs2Inventory.use(VIAL_OF_WATER_ID);
@@ -402,12 +393,10 @@ public class SulphurNaguaScript extends Script {
             }
             if (!droppedThisRound || dropped >= count) break;
         }
-        Microbot.log("Dropped " + dropped + " potions at " + dropLocation);
     }
 
     private void pickupDroppedPotions() {
         if (Rs2Inventory.isFull()) {
-            Microbot.log("Inventory is full, cannot pick up.");
             return;
         }
         if (potionsToPickup <= 0) {
@@ -430,10 +419,8 @@ public class SulphurNaguaScript extends Script {
         }
 
         if (potionsToPickup <= 0) {
-            Microbot.log("Finished picking up all potions.");
             resetPreparationState();
         } else if (!foundPotion) {
-            Microbot.log("Could not find any more dropped potions. Resetting.");
             resetPreparationState();
         }
     }
@@ -449,7 +436,6 @@ public class SulphurNaguaScript extends Script {
     }
 
     private void cleanupLeftoverIngredients() {
-        Microbot.log("Cleaning up leftover ingredients...");
         if (Rs2Inventory.hasItem("Vial")) Rs2Inventory.dropAll("Vial");
         sleep(400, 600);
         if (Rs2Inventory.hasItem(VIAL_OF_WATER_ID)) Rs2Inventory.dropAll(VIAL_OF_WATER_ID);
@@ -467,14 +453,12 @@ public class SulphurNaguaScript extends Script {
 
     private void handleGettingRunecraftingXp(SulphurNaguaConfig config) {
         if (Rs2Dialogue.isInDialogue()) {
-            Microbot.log("Handling dialogue...");
             Rs2Dialogue.clickContinue();
             sleepUntil(() -> !Rs2Dialogue.isInDialogue() || !Rs2Inventory.hasItem(SULPHUROUS_ESSENCE_ID), 3000);
             return;
         }
 
         if (!Rs2Inventory.hasItem(SULPHUROUS_ESSENCE_ID)) {
-            Microbot.log("No essence to exchange. Returning to preparation.");
             currentState = isAtLocation(selectedLocation.getPrepArea()) ? SulphurNaguaState.PREPARATION : SulphurNaguaState.WALKING_TO_PREP;
             return;
         }
@@ -487,18 +471,15 @@ public class SulphurNaguaScript extends Script {
 
         var eytallali = Rs2Npc.getNpc(EYTALLALI_ID);
         if (eytallali == null) {
-            Microbot.log("Waiting for Eytallali to appear...");
             sleep(600, 1000);
             return;
         }
 
         if (Rs2Player.isAnimating() || Microbot.isGainingExp) {
-            Microbot.log("Waiting for action to complete...");
             return;
         }
 
         if (Rs2Inventory.useItemOnNpc(SULPHUROUS_ESSENCE_ID, eytallali)) {
-            Microbot.log("Exchanging essence...");
             sleepUntil(Rs2Dialogue::isInDialogue, 5000);
         }
     }
@@ -539,7 +520,6 @@ public class SulphurNaguaScript extends Script {
                     }
                 }
             } else {
-                Microbot.log("Outside combat zone, walking back to center...");
                 Rs2Walker.walkTo(selectedLocation.getFightAreaCenter());
                 sleep(400, 800);
             }
@@ -659,8 +639,6 @@ public class SulphurNaguaScript extends Script {
 
 
     private void handleLooting() {
-        Microbot.log("Looting items...");
-
         if (isSulphurBladeNearby()) {
             int itemsBefore = Rs2Inventory.count(SULPHUR_BLADE_ID);
             if (Rs2GroundItem.interact(SULPHUR_BLADE_ID, "Take", 8)) {
