@@ -3,7 +3,7 @@ package net.runelite.client.plugins.microbot.ektotokens;
 import net.runelite.client.config.*;
 import net.runelite.client.plugins.microbot.inventorysetups.InventorySetup;
 
-@ConfigGroup("EctoTokenAIO")
+@ConfigGroup("ectotoken")
 @ConfigInformation("<html>"
         + "<h2 style='color: #6d9eeb;'>EctoToken AIO</h2>"
         + "<p>Wähle den gewünschten Modus durch Aktivieren der Checkboxen.</p>"
@@ -14,6 +14,7 @@ import net.runelite.client.plugins.microbot.inventorysetups.InventorySetup;
         + "    <li><b>Craft Ectotokens:</b> Der volle Ablauf (Worship).</li>"
         + "</ul>"
         + "</html>")
+
 public interface EctoTokenConfig extends Config {
 
     @ConfigSection(
