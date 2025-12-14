@@ -30,34 +30,36 @@ public class EctoTokenScript extends Script {
 
     public EctoState state = EctoState.IDLE;
 
-
     public long slimeCollected = 0;
     public long bonemealGround = 0;
-
+    public long worshipsDone = 0;
 
     private final int ECTOPHIAL_FULL = 4251;
 
+    private final int LAW_RUNE = 563;
+    private final int AIR_RUNE = 556;
+    private final int FIRE_RUNE = 554;
 
     private final int BUCKET_ID = 1925;
     private final int BUCKET_OF_SLIME_ID = 4286;
     private final int SLIME_OBJECT_ID = 17119;
 
-
     private final int BONE_ID = 526;
     private final int POT_ID = 1931;
 
-    // Output IDs
     private final int BONEMEAL_ID = 4255;
     private final int POT_OF_BONEMEAL_ID = 4278;
+
     private final int LOADER_ID = 16654;
     private final int STAIRS_UP_ID = 16646;
-
+    private final int ECTOFUNTUS_ALTAR_ID = 16648;
 
     private final int TRAPDOOR_CLOSED_ID = 16113;
     private final int TRAPDOOR_OPEN_ID = 16114;
 
     private final WorldPoint SLIME_POOL_LOCATION = new WorldPoint(3683, 9888, 0);
     private final WorldPoint HOPPER_LOCATION = new WorldPoint(3659, 3524, 1);
+    private final WorldPoint ALTAR_LOCATION = new WorldPoint(3660, 3520, 0);
     private final WorldPoint ECTO_TELE_POINT = new WorldPoint(3659, 3522, 0);
     private final WorldPoint GRAND_EXCHANGE_AREA = new WorldPoint(3164, 3487, 0);
 
@@ -83,7 +85,9 @@ public class EctoTokenScript extends Script {
                         break;
 
                     case WALKING_TO_LOCATION:
-                        if (config.craftBonemeal()) {
+                        if (config.craftEctotokens()) {
+                            handleWalkingToAltar();
+                        } else if (config.craftBonemeal()) {
                             handleWalkingToHopper();
                         } else if (config.craftBucketOfSlime()) {
                             handleWalkingToSlime();
@@ -91,7 +95,9 @@ public class EctoTokenScript extends Script {
                         break;
 
                     case WORKING:
-                        if (config.craftBonemeal()) {
+                        if (config.craftEctotokens()) {
+                            handleWorshipping();
+                        } else if (config.craftBonemeal()) {
                             handleGrindingBones();
                         } else if (config.craftBucketOfSlime()) {
                             handleCollectingSlime();
@@ -115,7 +121,9 @@ public class EctoTokenScript extends Script {
                         break;
 
                     case BANKING:
-                        if (config.craftBonemeal()) {
+                        if (config.craftEctotokens()) {
+                            handleWorshipBanking();
+                        } else if (config.craftBonemeal()) {
                             handleBonemealBanking();
                         } else if (config.craftBucketOfSlime()) {
                             handleSlimeBanking();
@@ -131,15 +139,107 @@ public class EctoTokenScript extends Script {
     }
 
     private void determineState(EctoTokenConfig config) {
-        boolean activeBonemeal = config.craftBonemeal();
-        boolean activeSlime = config.craftBucketOfSlime();
-
-        if (activeBonemeal) {
+        if (config.craftEctotokens()) {
+            determineWorshipState();
+        } else if (config.craftBonemeal()) {
             determineBonemealState();
-        } else if (activeSlime) {
+        } else if (config.craftBucketOfSlime()) {
             determineSlimeState();
         } else {
             Microbot.log("Bitte wähle einen Modus in den Einstellungen!");
+        }
+    }
+
+    private void determineWorshipState() {
+        boolean hasSlime = Rs2Inventory.hasItem(BUCKET_OF_SLIME_ID);
+        boolean hasBonemeal = Rs2Inventory.hasItem(BONEMEAL_ID) || Rs2Inventory.hasItem(POT_OF_BONEMEAL_ID);
+
+        if (!hasSlime || !hasBonemeal) {
+            if (Rs2Player.getWorldLocation().distanceTo(GRAND_EXCHANGE_AREA) < 150) {
+                if (Rs2Bank.isOpen()) state = EctoState.BANKING;
+                else state = EctoState.WALKING_TO_BANK;
+            } else {
+                state = EctoState.TELEPORT_TO_VARROCK;
+            }
+            return;
+        }
+
+        if (Rs2Player.getWorldLocation().getPlane() == 0 && Rs2Player.getWorldLocation().distanceTo(ALTAR_LOCATION) < 10) {
+            state = EctoState.WORKING;
+        } else {
+            state = EctoState.WALKING_TO_LOCATION;
+            if (Rs2Player.getWorldLocation().distanceTo(GRAND_EXCHANGE_AREA) < 200) {
+                state = EctoState.TELEPORT_TO_ECTO;
+            }
+        }
+    }
+
+    private void handleWalkingToAltar() {
+        if (Rs2Player.getWorldLocation().distanceTo(ECTO_TELE_POINT) > 60) {
+            if (Rs2Inventory.interact(ECTOPHIAL_FULL, "Empty")) {
+                Rs2Player.waitForAnimation();
+                sleep(3000);
+            }
+            return;
+        }
+
+        if (Rs2Player.getWorldLocation().getPlane() != 0) {
+            if (Rs2Inventory.interact(ECTOPHIAL_FULL, "Empty")) {
+                sleep(3000);
+            }
+            return;
+        }
+
+        Rs2Walker.walkTo(ALTAR_LOCATION);
+    }
+
+    private void handleWorshipping() {
+        boolean hasResources = Rs2Inventory.hasItem(BUCKET_OF_SLIME_ID)
+                && (Rs2Inventory.hasItem(BONEMEAL_ID) || Rs2Inventory.hasItem(POT_OF_BONEMEAL_ID));
+
+        if (!hasResources) return;
+
+        if (Rs2GameObject.interact(ECTOFUNTUS_ALTAR_ID, "Worship")) {
+            sleep(250, 500);
+            worshipsDone++;
+        }
+    }
+
+    private void handleWorshipBanking() {
+        if (!Rs2Bank.isOpen()) return;
+
+        Rs2Bank.depositAllExcept(ECTOPHIAL_FULL, LAW_RUNE, AIR_RUNE, FIRE_RUNE);
+        sleep(600, 1000);
+
+        if (!Rs2Inventory.hasItemAmount(BUCKET_OF_SLIME_ID, 12)) {
+            if (Rs2Bank.hasItem(BUCKET_OF_SLIME_ID)) {
+                Rs2Bank.withdrawX(BUCKET_OF_SLIME_ID, 12);
+                sleep(600, 1000);
+            } else {
+                Microbot.log("Keine Bucket of Slime mehr!");
+                shutdown();
+                return;
+            }
+        }
+
+        final int bonemealToWithdraw = (!Rs2Bank.hasItem(BONEMEAL_ID) && Rs2Bank.hasItem(POT_OF_BONEMEAL_ID))
+                ? POT_OF_BONEMEAL_ID
+                : BONEMEAL_ID;
+
+        if (!Rs2Inventory.hasItemAmount(bonemealToWithdraw, 12)) {
+            if (Rs2Bank.hasItem(bonemealToWithdraw)) {
+                Rs2Bank.withdrawX(bonemealToWithdraw, 12);
+                sleepUntil(() -> Rs2Inventory.hasItemAmount(bonemealToWithdraw, 12), 2000);
+            } else {
+                Microbot.log("Kein Bonemeal mehr!");
+                shutdown();
+                return;
+            }
+        }
+
+        if (Rs2Inventory.hasItemAmount(BUCKET_OF_SLIME_ID, 12) && Rs2Inventory.hasItemAmount(bonemealToWithdraw, 12)) {
+            Rs2Bank.closeBank();
+            sleepUntil(() -> !Rs2Bank.isOpen(), 1500);
         }
     }
 
@@ -153,15 +253,78 @@ public class EctoTokenScript extends Script {
             }
             return;
         }
-
         if (Rs2Player.getWorldLocation().getPlane() == 1 && Rs2Player.getWorldLocation().distanceTo(HOPPER_LOCATION) < 6) {
             state = EctoState.WORKING;
         } else {
             state = EctoState.WALKING_TO_LOCATION;
-
             if (Rs2Player.getWorldLocation().distanceTo(GRAND_EXCHANGE_AREA) < 200) {
                 state = EctoState.TELEPORT_TO_ECTO;
             }
+        }
+    }
+
+    private void handleWalkingToHopper() {
+        if (Rs2Player.getWorldLocation().distanceTo(ECTO_TELE_POINT) > 60 && Rs2Player.getWorldLocation().getPlane() == 0) {
+            if (Rs2Player.getWorldLocation().getY() < 9000) {
+                if (Rs2Inventory.interact(ECTOPHIAL_FULL, "Empty")) {
+                    Rs2Player.waitForAnimation();
+                    sleep(3000);
+                }
+                return;
+            }
+        }
+        if (Rs2Player.getWorldLocation().getPlane() == 0) {
+            WorldPoint stairsLocation = new WorldPoint(3660, 3524, 0);
+            if (Rs2Player.getWorldLocation().distanceTo(stairsLocation) > 8) {
+                Rs2Walker.walkTo(stairsLocation);
+            } else {
+                Rs2GameObject.interact(STAIRS_UP_ID, "Climb-up");
+                sleepUntil(() -> Rs2Player.getWorldLocation().getPlane() == 1, 5000);
+            }
+            return;
+        }
+        if (Rs2Player.getWorldLocation().getPlane() == 1) {
+            Rs2Walker.walkTo(HOPPER_LOCATION);
+        }
+    }
+
+    private void handleGrindingBones() {
+        if (!Rs2Inventory.hasItem(BONE_ID) || !Rs2Inventory.hasItem(POT_ID)) return;
+        if (Rs2Inventory.use(BONE_ID)) {
+            if (Rs2GameObject.interact(LOADER_ID, "Use")) {
+                Microbot.log("Starte Auto-Grind...");
+                sleep(600, 1200);
+                boolean grindingFinished = sleepUntil(
+                        () -> !Rs2Inventory.hasItem(BONE_ID) && !Rs2Inventory.hasItem(POT_ID),
+                        60000
+                );
+                if (grindingFinished) {
+                    bonemealGround += 12;
+                    Microbot.log("Verarbeitung abgeschlossen.");
+                }
+            }
+        }
+    }
+
+    private void handleBonemealBanking() {
+        if (!Rs2Bank.isOpen()) return;
+        if (Rs2Inventory.hasItem(BONEMEAL_ID)) Rs2Bank.depositAll(BONEMEAL_ID);
+        if (Rs2Inventory.hasItem(POT_OF_BONEMEAL_ID)) Rs2Bank.depositAll(POT_OF_BONEMEAL_ID);
+        sleep(400, 600);
+
+        if (!Rs2Inventory.hasItemAmount(BONE_ID, 12)) {
+            if (Rs2Bank.hasItem(BONE_ID)) Rs2Bank.withdrawX(BONE_ID, 12);
+            else { shutdown(); return; }
+            sleep(600, 1000);
+        }
+        if (!Rs2Inventory.hasItemAmount(POT_ID, 12)) {
+            if (Rs2Bank.hasItem(POT_ID)) Rs2Bank.withdrawX(POT_ID, 12);
+            else { shutdown(); return; }
+            sleepUntil(() -> Rs2Inventory.hasItemAmount(POT_ID, 12), 2000);
+        }
+        if (Rs2Inventory.hasItemAmount(BONE_ID, 12) && Rs2Inventory.hasItemAmount(POT_ID, 12)) {
+            Rs2Bank.closeBank();
+            sleepUntil(() -> !Rs2Bank.isOpen(), 1500);
         }
     }
 
@@ -175,7 +338,6 @@ public class EctoTokenScript extends Script {
             }
             return;
         }
-
         if (Rs2Player.getWorldLocation().getY() > 9000 && Rs2Player.getWorldLocation().distanceTo(SLIME_POOL_LOCATION) < 8) {
             state = EctoState.WORKING;
         } else {
@@ -183,98 +345,6 @@ public class EctoTokenScript extends Script {
             if (Rs2Player.getWorldLocation().distanceTo(GRAND_EXCHANGE_AREA) < 200) {
                 state = EctoState.TELEPORT_TO_ECTO;
             }
-        }
-    }
-
-    private void handleWalkingToHopper() {
-        // Ectophial nutzen
-        if (Rs2Player.getWorldLocation().distanceTo(ECTO_TELE_POINT) > 60 && Rs2Player.getWorldLocation().getPlane() == 0) {
-            if (Rs2Player.getWorldLocation().getY() < 9000) {
-                if (Rs2Inventory.interact(ECTOPHIAL_FULL, "Empty")) {
-                    Rs2Player.waitForAnimation();
-                    sleep(3000);
-                }
-                return;
-            }
-        }
-
-        if (Rs2Player.getWorldLocation().getPlane() == 0) {
-            WorldPoint stairsLocation = new WorldPoint(3660, 3524, 0);
-            if (Rs2Player.getWorldLocation().distanceTo(stairsLocation) > 8) {
-                Rs2Walker.walkTo(stairsLocation);
-            } else {
-                Rs2GameObject.interact(STAIRS_UP_ID, "Climb-up");
-                sleepUntil(() -> Rs2Player.getWorldLocation().getPlane() == 1, 5000);
-            }
-            return;
-        }
-
-        if (Rs2Player.getWorldLocation().getPlane() == 1) {
-            Rs2Walker.walkTo(HOPPER_LOCATION);
-        }
-    }
-
-    private void handleGrindingBones() {
-        if (!Rs2Inventory.hasItem(BONE_ID) || !Rs2Inventory.hasItem(POT_ID)) return;
-
-        if (Rs2Inventory.use(BONE_ID)) {
-            if (Rs2GameObject.interact(LOADER_ID, "Use")) {
-                Microbot.log("Starte Auto-Grind...");
-                sleep(600, 1200);
-
-                boolean grindingFinished = sleepUntil(
-                        () -> !Rs2Inventory.hasItem(BONE_ID) && !Rs2Inventory.hasItem(POT_ID),
-                        60000
-                );
-
-                if (grindingFinished) {
-                    bonemealGround += 12;
-                    Microbot.log("Verarbeitung abgeschlossen.");
-                } else {
-                    Microbot.log("Zeitüberschreitung beim Grinden.");
-                }
-            }
-        }
-    }
-
-    private void handleBonemealBanking() {
-        if (!Rs2Bank.isOpen()) return;
-
-        if (Rs2Inventory.hasItem(BONEMEAL_ID)) {
-            Rs2Bank.depositAll(BONEMEAL_ID);
-            sleep(400, 600);
-        }
-
-        if (Rs2Inventory.hasItem(POT_OF_BONEMEAL_ID)) {
-            Rs2Bank.depositAll(POT_OF_BONEMEAL_ID);
-            sleep(400, 600);
-        }
-
-        if (!Rs2Inventory.hasItemAmount(BONE_ID, 12)) {
-            if (Rs2Bank.hasItem(BONE_ID)) {
-                Rs2Bank.withdrawX(BONE_ID, 12);
-                sleep(600, 1000);
-            } else {
-                Microbot.log("Keine Knochen mehr in der Bank!");
-                shutdown();
-                return;
-            }
-        }
-
-        if (!Rs2Inventory.hasItemAmount(POT_ID, 12)) {
-            if (Rs2Bank.hasItem(POT_ID)) {
-                Rs2Bank.withdrawX(POT_ID, 12);
-                sleepUntil(() -> Rs2Inventory.hasItemAmount(POT_ID, 12), 2000);
-            } else {
-                Microbot.log("Keine Pots mehr in der Bank!");
-                shutdown();
-                return;
-            }
-        }
-
-        if (Rs2Inventory.hasItemAmount(BONE_ID, 12) && Rs2Inventory.hasItemAmount(POT_ID, 12)) {
-            Rs2Bank.closeBank();
-            sleepUntil(() -> !Rs2Bank.isOpen(), 1500);
         }
     }
 
