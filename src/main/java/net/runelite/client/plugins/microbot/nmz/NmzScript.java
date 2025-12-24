@@ -21,6 +21,7 @@ import net.runelite.client.plugins.microbot.util.prayer.Rs2Prayer;
 import net.runelite.client.plugins.microbot.util.prayer.Rs2PrayerEnum;
 import net.runelite.client.plugins.microbot.util.security.Encryption;
 import net.runelite.client.plugins.microbot.util.security.Login;
+import net.runelite.client.plugins.microbot.util.security.LoginManager;
 import net.runelite.client.plugins.microbot.util.walker.Rs2Walker;
 import net.runelite.client.plugins.microbot.util.widget.Rs2Widget;
 
@@ -70,16 +71,18 @@ public class NmzScript extends Script {
                 if (!Microbot.isLoggedIn()) return;
                 if (!initialized) {
                     initialized = true;
-                    if (config.inventorySetup() != null) {
-                        var inventorySetup = new Rs2InventorySetup(config.inventorySetup(), mainScheduledFuture);
-                        if (!inventorySetup.doesInventoryMatch() || !inventorySetup.doesEquipmentMatch()) {
-                            Rs2Walker.walkTo(Rs2Bank.getNearestBank().getWorldPoint(), 20);
-                            if (!inventorySetup.loadEquipment() || !inventorySetup.loadInventory()) {
-                                Microbot.log("Failed to load inventory setup");
-                                Microbot.stopPlugin(plugin);
-                                return;
+                    if (config.inventorySetupon()) {
+                        if (config.inventorySetup() != null) {
+                            var inventorySetup = new Rs2InventorySetup(config.inventorySetup(), mainScheduledFuture);
+                            if (!inventorySetup.doesInventoryMatch() || !inventorySetup.doesEquipmentMatch()) {
+                                Rs2Walker.walkTo(Rs2Bank.getNearestBank().getWorldPoint(), 20);
+                                if (!inventorySetup.loadEquipment() || !inventorySetup.loadInventory()) {
+                                    Microbot.log("Failed to load inventory setup");
+                                    Microbot.stopPlugin(plugin);
+                                    return;
+                                }
+                                Rs2Bank.closeBank();
                             }
-                            Rs2Bank.closeBank();
                         }
                     }
                     Rs2Walker.walkTo(new WorldPoint(2609, 3114, 0), 5);
@@ -348,7 +351,7 @@ public class NmzScript extends Script {
         sleepUntil(() -> Rs2Widget.isWidgetVisible(13500418) || Rs2Bank.isBankPinWidgetVisible(), 10000);
         if (Rs2Bank.isBankPinWidgetVisible()) {
             try {
-                Rs2Bank.handleBankPin(Encryption.decrypt(Login.activeProfile.getBankPin()));
+                Rs2Bank.handleBankPin(Encryption.decrypt(LoginManager.getActiveProfile().getBankPin()));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
